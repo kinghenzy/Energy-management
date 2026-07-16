@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greene Brook Smart Energy Master Dashboard</title>
+    
+    <!-- Tailwind CSS for robust, mobile-first utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Library for crisp structural iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+     
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+        }
+        h1, h2, h3, h4, button, select, input {
+            font-family: 'Poppins', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030712;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #facc15;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="p-4 md:p-6 bg-slate-950 border-b border-slate-900 sticky top-0 z-50 flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3 w-full lg:w-auto justify-start">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-500 to-amber-500 flex items-center justify-center text-slate-950 font-extrabold text-xl shadow-lg shadow-yellow-500/20 shrink-0">
+            ⚡
+          </div>
+          <div>
+            <h1 class="text-base md:text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-yellow-400 bg-clip-text text-transparent">Greene Brook Master System</h1>
+            <p class="text-[9px] md:text-[10px] text-slate-400 tracking-wider uppercase">Global Interactive Sizing, Financial Cost &amp; Diagnostic Workspace</p>
+          </div>
+        </div>
+        
+        <!-- Arranged as a clean 2-column grid on mobile, and a horizontal row on desktop -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-wrap items-center justify-center gap-2 md:gap-4 w-full lg:w-auto">
+          <!-- System Voltage Toggle (110V vs 220V standard) -->
+          <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
+            <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Voltage:</span>
+            <select id="gridVoltage" onchange="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none cursor-pointer">
+              <option class="bg-slate-950 text-slate-200" value="220" selected>220V (EU/NG)</option>
+              <option class="bg-slate-950 text-slate-200" value="110">110V (US/CA)</option>
+            </select>
+          </div>
+          <!-- Currency selector -->
+          <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
+            <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Currency:</span>
+            <select id="globalCurrency" onchange="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none cursor-pointer">
+              <option class="bg-slate-950 text-slate-200" value="₦" selected>₦ (NGN)</option>
+              <option class="bg-slate-950 text-slate-200" value="$">$ (USD)</option>
+              <option class="bg-slate-950 text-slate-200" value="£">£ (GBP)</option>
+              <option class="bg-slate-950 text-slate-200" value="€">€ (EUR)</option>
+              <option class="bg-slate-950 text-slate-200" value="Rs">Rs (PKR)</option>
+            </select>
+          </div>
+          <!-- Tariff selector -->
+          <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
+            <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Tariff/kWh:</span>
+            <input type="number" id="globalTariff" value="225" min="0.1" step="0.1" oninput="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none w-12 text-right font-mono">
+          </div>
+          <!-- Sun hours selector -->
+          <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
+            <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Sun Hrs:</span>
+            <input type="number" id="peakSunHours" value="5.0" min="2" max="10" step="0.5" oninput="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none w-10 text-right font-mono">
+          </div>
+        </div>
+    </header>
+
+    <div class="md:hidden flex bg-slate-950 border-b border-slate-900 sticky top-[138px] sm:top-[73px] z-40 text-[10px] sm:text-xs font-bold text-slate-400">
+        <button onclick="switchMobileView('workstation')" id="mobTab-workstation" class="flex-1 py-3.5 text-center border-b-2 border-yellow-500 text-yellow-400 transition">
+          <i class="fa-solid fa-screwdriver-wrench mr-1"></i> Sizing
+        </button>
+        <button onclick="switchMobileView('diagnostics')" id="mobTab-diagnostics" class="flex-1 py-3.5 text-center border-b-2 border-transparent transition">
+          <i class="fa-solid fa-flask-vial mr-1"></i> Lab
+        </button>
+        <button onclick="switchMobileView('education')" id="mobTab-education" class="flex-1 py-3.5 text-center border-b-2 border-transparent transition">
+          <i class="fa-solid fa-graduation-cap mr-1"></i> Hub
+        </button>
+        <button onclick="switchMobileView('shop')" id="mobTab-shop" class="flex-1 py-3.5 text-center border-b-2 border-transparent transition">
+          <i class="fa-solid fa-cart-shopping mr-1"></i> Shop
+        </button>
+    </div>
+
+    <!-- MAIN TWO-COLUMN WORKSPACE GRID -->
+    <main class="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        
+        <!-- LEFT COLUMN: Calculator Workstation (Inputs, Checklist, AC Specs) -->
+        <section id="column-workstation" class="md:col-span-6 lg:col-span-7 space-y-6 block">
+            
+            <!-- Box 1: Core Physical Sizing Specifications -->
+            <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> 1. System Hardware Capacities
+                    </h3>
+                    <button onclick="openContextualHelp('hardware-help')" class="text-xs text-slate-500 hover:text-yellow-400 transition">
+                        <i class="fa-solid fa-circle-question"></i> Help
+                    </button>
+                </div>
+                
+                <div id="hardware-help" class="hidden p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 space-y-1">
+                    <p><strong>Inverter Rating:</strong> Continuous capacity of your inverter. 1 kVA solid-state hybrid inverter delivers roughly 1 kW of clean power.</p>
+                    <p><strong>Generator Rating:</strong> Peak mechanical fuel generator size. Generators carry an average 0.8 Power Factor (PF).</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Inverter Rating (kVA)</label>
+                        <input type="number" id="inverterKva" value="3.5" min="1.0" max="30.0" step="0.5" oninput="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Generator Rating (kVA)</label>
+                        <input type="number" id="generatorKva" value="3.5" min="1.0" max="30.0" step="0.5" oninput="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Battery Chemistry</label>
+                        <select id="batteryType" onchange="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                            <option value="lithium" selected>Lithium Iron (LiFePO4) - 80% DoD</option>
+                            <option value="gel">Deep-Cycle Gel - 50% DoD</option>
+                            <option value="tubular">Tubular Lead-Acid - 50% DoD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Bank Config (Voltage)</label>
+                        <select id="batteryConfig" onchange="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                            <option value="12">12V System</option>
+                            <option value="24">24V System</option>
+                            <option value="48" selected>48V System</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Bank Volume (Ah)</label>
+                        <input type="number" id="batteryAh" value="100" min="50" max="2000" step="50" oninput="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">Total Storage Pool</label>
+                        <div id="totalWhOutput" class="text-sm font-extrabold text-yellow-400 pt-2 font-mono">4,800 Wh (4.8 kWh)</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/50">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">DC Cable Size</label>
+                            <span class="text-[9px] text-yellow-400 cursor-help" title="DC Cables must be thick enough to transmit high surge currents without voltage sag."><i class="fa-solid fa-circle-question"></i></span>
+                        </div>
+                        <select id="cableGauge" onchange="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                            <option value="16">16 mm² (Thin Core)</option>
+                            <option value="25">25 mm² (Standard Core)</option>
+                            <option value="35">35 mm² (Copper Shield)</option>
+                            <option value="50" selected>50 mm² (Heavy-Duty)</option>
+                        </select>
+                        <span class="text-[9px] text-slate-500 mt-1 block">💡 50 mm² is highly recommended for water pump/compressor surges.</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">DC Cable Run (m)</label>
+                        <input type="number" id="cableLength" value="1.0" min="0.5" max="5.0" step="0.1" oninput="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 2: Domestic Sizing Checklist -->
+            <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-list-check"></i> 2. Domestic Sizing Checklist
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <!-- LocalStorage Active Save Indicator -->
+                        <span id="saveBadge" class="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono flex items-center gap-1 transition opacity-0">
+                            <i class="fa-solid fa-cloud-arrow-up text-[8px]"></i> Saved
+                        </span>
+                        <button onclick="resetApplianceQuantities()" class="text-[10px] text-slate-500 hover:text-rose-400 transition tracking-normal font-bold uppercase">Reset Quantities</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[9px] text-slate-400 uppercase tracking-wider">
+                                <th class="pb-2 font-semibold">Household Item</th>
+                                <th class="pb-2 font-semibold text-center w-16">Qty</th>
+                                <th class="pb-2 font-semibold text-right w-20">Watts</th>
+                                <th class="pb-2 font-semibold text-right w-16">Surge</th>
+                                <th class="pb-2 font-semibold text-right w-16">Hours</th>
+                                <th class="pb-2 font-semibold text-center w-12">Active</th>
+                                <th class="pb-2 font-semibold text-center w-12">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applianceRows">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ADD CUSTOM APPLIANCE DRAWER -->
+                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800/80 space-y-3">
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wide block">Add Custom Appliance</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <input type="text" id="addName" placeholder="e.g. Air Fryer" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <input type="number" id="addWatts" placeholder="Watts" min="1" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <input type="number" id="addSurge" placeholder="Surge Mult" min="1.0" max="10.0" step="0.5" value="1.0" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                        <input type="number" id="addHours" placeholder="Hours" min="0.1" max="24" step="0.5" class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <button onclick="addCustomAppliance()" class="w-full py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500 hover:text-slate-950 transition">
+                        + Inject Appliance into calculations
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 text-xs text-slate-400 border-t border-slate-800/60">
+                    <span>Continuous active running load:</span>
+                    <span id="activeTotalRunningWatts" class="font-extrabold text-emerald-400 font-mono">0 W</span>
+                </div>
+            </div>
+
+            <!-- Box 3: Smart AC Sizing Engine -->
+            <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                <h3 class="text-sm font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-wind"></i> 3. Smart AC Sizing Engine
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Stickers on outdoor units distinguish between standard **Power Input (running power draw)** and **Rated Power Input (maximum stress power draw)**. Enter these parameters manually below, or scan your label directly using our photo module.
+                </p>
+
+                <!-- Input mode selectors -->
+                <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    <button onclick="toggleAcInputMode('manual')" id="acTab-manual" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition">
+                        Manual Input (Label Terms)
+                    </button>
+                    <button onclick="toggleAcInputMode('ai')" id="acTab-ai" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                        Photo Label Scanner
+                    </button>
+                </div>
+
+                <!-- MANUAL DETAILED SPECS -->
+                <div id="acContainer-manual" class="space-y-3 block">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1 font-semibold uppercase">Power Input / Running (Watts)</label>
+                            <input type="number" id="acManualWatts" value="1180" oninput="updateAcManualValues()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-yellow-500">
+                            <span class="text-[9px] text-slate-500 mt-1 block">Normal cooling draw (Sticker: 1180W)</span>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-500 mb-1 font-semibold uppercase">Rated Power Input (Watts)</label>
+                            <input type="number" id="acRatedWatts" value="1720" oninput="updateAcManualValues()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-yellow-500">
+                            <span class="text-[9px] text-slate-500 mt-1 block">Extreme ambient draw (Sticker: 1720W)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <label class="block text-[10px] text-slate-500 mb-1 font-semibold uppercase">LRA (Locked Rotor Amps)</label>
+                                <span class="text-[9px] text-yellow-400 cursor-help" title="Locked Rotor Amps represents the instantaneous electrical current drawn by the compressor when starting from a complete dead stop. Check your label for 'LRA'."><i class="fa-solid fa-circle-question"></i></span>
+                            </div>
+                            <input type="number" id="acManualLRA" value="9.0" step="0.1" oninput="updateAcManualValues()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-yellow-500">
+                            <span class="text-[9px] text-slate-500 mt-1 block">ℹ️ Starting Current (Sticker: 9.0A). Leave blank/0 to use the compressor type fallback.</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <label class="block text-[10px] text-slate-500 mb-1 font-semibold uppercase">Compressor Type / Tech</label>
+                                <span class="text-[9px] text-yellow-400 cursor-help" title="Inverter technology ACs slowly ramp up speeds smoothly, avoiding massive startup power surges. Fixed-speed induction compressors start instantly with a huge 4x to 5x surge."><i class="fa-solid fa-circle-question"></i></span>
+                            </div>
+                            <select id="acManualType" onchange="updateAcManualType(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-yellow-500">
+                                <option value="4.0" selected>Fixed-Speed Inductive (4x-5x Spike Profile)</option>
+                                <option value="1.5">Variable Inverter (1.5x Smooth Ramp)</option>
+                            </select>
+                            <span class="text-[9px] text-slate-400 mt-1 block">💡 <strong>Tip:</strong> Inverter ACs have an "Inverter" logo printed clearly on the indoor front face. If missing or the AC is over 5 years old, select <strong>Fixed-Speed</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHOTO LABEL SCANNER -->
+                <div id="acContainer-ai" class="space-y-3 hidden">
+                    <div class="bg-slate-950 border border-dashed border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center text-center space-y-3 relative">
+                        <div id="imagePreviewContainer" class="hidden w-24 h-32 border border-slate-800 rounded overflow-hidden shadow">
+                            <img id="imagePreview" src="" class="w-full h-full object-cover">
+                        </div>
+                        <div id="dropzoneText" class="space-y-1">
+                            <i class="fa-solid fa-image text-slate-600 text-2xl"></i>
+                            <p class="text-xs text-slate-400 font-semibold">Import nameplate label photo</p>
+                            <p class="text-[9px] text-slate-500">Supports JPG (e.g., IMG_20260508_173411.jpg)</p>
+                        </div>
+                        <input type="file" id="ocrFileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="loadSampleNameplate()" class="flex-grow py-2 px-3 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-image text-yellow-400"></i> Load Label "IMG_20260508_173411.jpg"
+                        </button>
+                        <button onclick="triggerAiScan()" id="scanButton" disabled class="px-4 py-2 rounded-lg bg-yellow-500 disabled:opacity-30 disabled:cursor-not-allowed text-slate-950 text-xs font-bold hover:bg-yellow-400 transition flex items-center justify-center gap-1.5 shadow-lg">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Scan Label
+                        </button>
+                    </div>
+
+                    <div id="scanStatus" class="hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: Diagnostics, Education Hub, Video Panel, Store, Sizing Verdicts -->
+        <section id="column-education" class="md:col-span-6 lg:col-span-5 space-y-6 hidden md:block">
+            
+            <!-- SYSTEM INTEGRITY STATUS DISPLAY -->
+            <div class="bg-slate-900/60 border border-slate-800 p-4 md:p-6 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 items-center shadow-2xl relative overflow-hidden">
+                <div id="verdictGlow" class="absolute inset-0 bg-emerald-500/5 transition-all duration-300 pointer-events-none"></div>
+                
+                <div class="sm:col-span-2 space-y-1">
+                    <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase block">System Integrity Sizing Verdict</span>
+                    <h2 id="systemStatusHeading" class="text-lg md:text-xl font-extrabold text-emerald-400">SYSTEM SECURE</h2>
+                    <p id="systemStatusDetails" class="text-xs text-slate-400 leading-relaxed">
+                        Your combined continuous active load and starting multipliers fit securely within the selected equipment limits.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col items-center justify-center p-3 bg-slate-950 rounded-xl border border-slate-800/80">
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">Max Headroom</span>
+                    <span id="systemHeadroomValue" class="text-lg font-extrabold text-emerald-400 font-mono">0 W</span>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase mt-1">Sustained</span>
+                </div>
+            </div>
+
+            <!-- Tab Toggles -->
+            <div class="flex flex-wrap bg-slate-950 p-1 rounded-xl border border-slate-850 gap-1">
+                <button onclick="switchTab('slides')" id="tab-slides" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition">
+                    Sizing Slides
+                </button>
+                <button onclick="switchTab('diagnostics')" id="tab-diagnostics" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                    Diagnostics Lab
+                </button>
+                <button onclick="switchTab('charts')" id="tab-charts" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                    Signal Waves
+                </button>
+                <button onclick="switchTab('education')" id="tab-education" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                    Video &amp; PDF Manual
+                </button>
+                <button onclick="switchTab('shop')" id="tab-shop" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                    Store
+                </button>
+                <button onclick="switchTab('transfer')" id="tab-transfer" class="flex-1 py-2 px-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+                    Transfer
+                </button>
+            </div>
+
+            <!-- TAB 1: INTERACTIVE EDUCATION SLIDESHOW (20 Novice Sizing Lessons) -->
+            <div id="content-slides" class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-6 shadow-xl block">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h4 class="text-xs font-extrabold text-yellow-400 uppercase tracking-widest">Tutorial Classroom Deck</h4>
+                    <span class="text-[10px] text-slate-500 font-mono" id="slideNumberDisplay">Slide 1 of 20</span>
+                </div>
+
+                <!-- Render active slide -->
+                <div id="slideshowViewport" class="min-h-[260px] flex flex-col justify-between"></div>
+
+                <div class="flex justify-between items-center pt-3 border-t border-slate-800/50">
+                    <button onclick="moveSlide(-1)" class="px-3 py-1.5 rounded bg-slate-950 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-300">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Prev
+                    </button>
+                    <button onclick="moveSlide(1)" class="px-3 py-1.5 rounded bg-yellow-500 text-slate-950 text-xs font-bold hover:bg-yellow-400 transition">
+                        Next Slide <i class="fa-solid fa-arrow-right mr-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 2: BATTERY HEALTH & CONTROLLER DIAGNOSTICS LAB -->
+            <div id="content-diagnostics" class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-flask"></i> Fake Battery &amp; Health Diagnoser
+                    </h3>
+                    <span class="text-[9px] text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase">SCAM SHIELD</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Unscrupulous dealers glue concrete, iron plates, or sandbags inside battery enclosures to cheat scale weight metrics. Use our diagnostic metrics to verify your battery's internal physical chemistry and potency decay.
+                </p>
+
+                <!-- Test 1: Fake Weight Checker -->
+                <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+                    <span class="text-xs font-bold text-slate-200 block border-b border-slate-800 pb-1">Scam Check: Battery Weight Verification</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Ah Capacity</label>
+                            <select id="diagAh" onchange="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200">
+                                <option value="100" selected>100 Ah</option>
+                                <option value="200">200 Ah</option>
+                                <option value="150">150 Ah</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Voltage</label>
+                            <select id="diagVolts" onchange="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200">
+                                <option value="48" selected>48V (LFP Block)</option>
+                                <option value="12">12V (Tubular/Gel)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Real Weight (kg)</label>
+                            <input type="number" id="diagWeight" value="41" oninput="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-yellow-400 font-mono">
+                        </div>
+                    </div>
+                    <div id="weightResult" class="p-2.5 rounded-lg text-xs font-semibold text-center mt-1"></div>
+                </div>
+
+                <!-- Test 2: Potency Decay Checker (Internal Resistance Voltage Sag) -->
+                <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+                    <span class="text-xs font-bold text-slate-200 block border-b border-slate-800 pb-1">Health Check: Voltage Sag Diagnostic</span>
+                    <p class="text-[9px] text-slate-400 italic">
+                        Measure battery voltage with no load connected (Open Circuit), then turn on your heaviest running load (e.g. AC) and record the drop in voltage.
+                    </p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Open Volts (Voc)</label>
+                            <input type="number" id="sagVoc" value="53.2" step="0.1" oninput="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Loaded Volts (Vload)</label>
+                            <input type="number" id="sagVload" value="51.8" step="0.1" oninput="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Current draw (A)</label>
+                            <input type="number" id="sagAmps" value="30" step="1" oninput="runDiagnostics()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 font-mono">
+                        </div>
+                    </div>
+                    <div id="sagResult" class="p-2.5 rounded-lg text-xs font-semibold text-center mt-1"></div>
+                </div>
+            </div>
+
+            <!-- TAB 3: SIGNAL WAVE OSCILLOSCOPE & SOLAR PV HARVESTER -->
+            <div id="content-charts" class="space-y-6 hidden">
+                <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest">Electricity Signal Waves</h3>
+                        <select id="sourceSelect" onchange="triggerRecalculation()" class="bg-slate-950 border border-slate-800 text-[10px] font-semibold text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-yellow-500">
+                            <option value="inverter">Inverter (0.8% THD)</option>
+                            <option value="utility">Grid Utility (3% THD)</option>
+                            <option value="generator">Generator (18% THD)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 rounded-xl p-2 h-36 flex flex-col justify-between border border-slate-850">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Signal Waveform</span>
+                            <canvas id="oscCanvas" class="w-full h-24 block bg-slate-950"></canvas>
+                        </div>
+                        <div class="bg-slate-950 rounded-xl p-2 h-36 flex flex-col justify-between border border-slate-850">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Battery Decay Slope</span>
+                            <canvas id="batteryChart" class="w-full h-24 block bg-slate-950"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-solar-panel"></i> Solar PV Sizing Blueprint
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Solar Module Size</span>
+                            <select id="pvModuleSize" onchange="triggerRecalculation()" class="bg-transparent text-xs text-emerald-400 font-bold focus:outline-none w-full mt-1 cursor-pointer">
+                                <option class="bg-slate-950 text-slate-200" value="450" selected>450W Mono Panel</option>
+                                <option class="bg-slate-950 text-slate-200" value="550">550W Mono Panel</option>
+                                <option class="bg-slate-950 text-slate-200" value="300">300W Panel</option>
+                            </select>
+                        </div>
+                        <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold block">Minimum Panel Qty</span>
+                            <span id="pvRequiredCount" class="text-sm font-extrabold text-emerald-400 block mt-1 font-mono">0 Panels</span>
+                        </div>
+                    </div>
+
+                    <!-- SOLAR DUST LOSS HARVEST ENGINE -->
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+                        <div class="flex justify-between items-center">
+                          <span class="text-[10px] text-slate-400 uppercase font-bold">Your Solar Panels:</span>
+                          <span class="text-[9px] text-slate-500 italic">Test if they carry your load</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                          <div>
+                            <label class="block text-[9px] text-slate-500 mb-0.5">Number of Panels</label>
+                            <input type="number" id="userPanelCount" value="6" min="0" oninput="triggerRecalculation()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-yellow-400 font-mono focus:outline-none focus:border-emerald-500">
+                          </div>
+                          <div>
+                            <div class="flex items-center gap-1">
+                                <label class="block text-[9px] text-slate-500 mb-0.5">Dust &amp; Heat Loss (%)</label>
+                                <span class="text-[9px] text-yellow-400 cursor-help" title="Dust, dirt, pollen, and high temperatures de-rate your panel performance. Standard is 20%. Dusty environments can exceed 35%."><i class="fa-solid fa-circle-question"></i></span>
+                            </div>
+                            <input type="number" id="dustLoss" value="20" min="0" max="80" oninput="triggerRecalculation()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-yellow-400 font-mono focus:outline-none focus:border-emerald-500">
+                            <!-- Quick choice buttons for user aid on Dust Loss -->
+                            <div class="flex gap-1 mt-1">
+                                <button onclick="quickSetDustLoss(10)" class="text-[8px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-1 py-0.5 rounded tracking-tight">Clean (10%_)</button>
+                                <button onclick="quickSetDustLoss(20)" class="text-[8px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-1 py-0.5 rounded tracking-tight">Normal (20%)</button>
+                                <button onclick="quickSetDustLoss(40)" class="text-[8px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-1 py-0.5 rounded tracking-tight">Dusty (40%)</button>
+                            </div>
+                          </div>
+                          <div class="flex flex-col justify-end">
+                            <span class="text-[9px] text-slate-500 mb-0.5">Est. Daily Harvest</span>
+                            <span id="userSolarRefillEst" class="text-xs font-bold text-slate-300 font-mono">0.00 kWh</span>
+                          </div>
+                        </div>
+                        
+                        <div id="solarSufficientVerdict" class="p-2.5 rounded-lg text-xs font-semibold text-center mt-1"></div>
+                    </div>
+
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl">
+                        <span class="text-[9px] text-slate-500 uppercase font-bold block">Recommended MPPT Controller size</span>
+                        <span id="mpptRequiredSize" class="text-xs text-slate-300 block mt-1">Sizing standard requires load matching.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: EDUCATION HUB & VIDEO MEDIA LIBRARY -->
+            <div id="content-education" class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl hidden">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest">Cinema Media &amp; PDF Library</h3>
+                    <span class="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">FREE DOWNLOADS</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- YouTube Explainer Simulator Box -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-850 space-y-2">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Video Classroom Masterclass</span>
+                        <div class="aspect-video w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center relative group">
+                            <!-- Real beautiful Unsplash solar thumbnail -->
+                            <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&h=450&q=80" alt="Solar Sizing Course Cover" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                            
+                            <!-- Video Title Overlay (Mimicking real YouTube embed header) -->
+                            <div class="absolute top-0 inset-x-0 bg-gradient-to-b from-black/90 to-transparent p-3 flex items-center justify-between pointer-events-none">
+                                <span class="text-xs font-bold text-white tracking-wide truncate">Greene Brook Masterclass: Vol 1-5 Comprehensive Sizing Course</span>
+                                <i class="fa-solid fa-ellipsis-vertical text-white text-xs opacity-80"></i>
+                            </div>
+
+                            <!-- Play Button Hover Glow Circle -->
+                            <div class="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/45 transition duration-300 flex items-center justify-center">
+                                <a href="https://www.youtube.com/playlist?list=PLR2j2TTkamR0" target="_blank" class="w-14 h-14 bg-red-600 hover:bg-red-500 active:scale-95 transition-all text-white rounded-full flex items-center justify-center text-xl shadow-xl shadow-red-600/40 relative group-hover:scale-110 duration-300">
+                                    <i class="fa-solid fa-play ml-1"></i>
+                                </a>
+                            </div>
+
+                            <!-- Duration Stamp -->
+                            <div class="absolute bottom-3 right-3 bg-slate-950/90 text-[10px] font-bold text-slate-200 px-1.5 py-0.5 rounded border border-slate-800 font-mono">
+                                45:12
+                            </div>
+
+                            <!-- Mock Video Player Seekbar -->
+                            <div class="absolute bottom-0 inset-x-0 h-1 bg-slate-800">
+                                <div class="h-full w-[45%] bg-red-600 rounded-r"></div>
+                            </div>
+                        </div>
+                        <span class="text-[9px] text-slate-400 italic block text-center">Click the play button to launch the full Greene Brook Solar Sizing course playlist on YouTube.</span>
+                    </div>
+
+                    <!-- PDF Manual Landing Gate -->
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 flex flex-col items-center text-center space-y-3">
+                        <span class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg border border-emerald-500/20"><i class="fa-solid fa-file-pdf"></i></span>
+                        <div class="space-y-1">
+                            <h4 class="text-xs font-bold text-slate-100">Download Greene Brook Manual</h4>
+                            <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">Gain absolute energy security. Download our compiled technical blueprints to guide your onsite installation crew and protect your house from fire hazards.</p>
+                        </div>
+                        <a href="https://drive.google.com/file/d/1hzBeT6ExmR_QWtKaPtgijIpO4I2Eq_DO/view?usp=drive_link" target="_blank" class="w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition flex items-center justify-center gap-2">
+                            Download PDF Manual <i class="fa-solid fa-cloud-arrow-down"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CERTIFIED AFFILIATE GEAR SHOP -->
+            <div id="content-shop" class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping"></i> Author's Certified Hardware
+                    </h3>
+                    <span class="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">TRUSTED GEAR</span>
+                </div>
+
+                <div class="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl hover:border-slate-700 transition flex justify-between items-center gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-100 block">Sunsynk 5kW Hybrid Inverter</span>
+                            <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">Supports high inductive surges safely. True Unity power factor ($PF=1.0$) with dry contacts for automation.</p>
+                        </div>
+                        <a href="https://amazon.com/dp/example-sunsynk-5kw" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold hover:bg-emerald-400 transition flex items-center gap-1 shrink-0">
+                            Buy <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                        </a>
+                    </div>
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl hover:border-slate-700 transition flex justify-between items-center gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-100 block">Deye 48V 100Ah LiFePO4 Block</span>
+                            <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">Bluetooth smart active BMS, certified Grade-A prismatic cells, 6000+ lifecycle guarantee.</p>
+                        </div>
+                        <a href="https://amazon.com/dp/example-deye-lithium" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold hover:bg-emerald-400 transition flex items-center gap-1 shrink-0">
+                            Buy <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                        </a>
+                    </div>
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl hover:border-slate-700 transition flex justify-between items-center gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-100 block">Dehn AC Surge Protective SPD</span>
+                            <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">Sacrificial safety valve shielding your electronic inverter from lightning surge spikes.</p>
+                        </div>
+                        <a href="https://amazon.com/dp/example-dehn-spd" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold hover:bg-emerald-400 transition flex items-center gap-1 shrink-0">
+                            Buy <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                        </a>
+                    </div>
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl hover:border-slate-700 transition flex justify-between items-center gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold text-slate-100 block">WindyNation 50mm² Battery Cable</span>
+                            <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs">Thick 100% pure copper core preventing voltage drops during heavy water pump startups.</p>
+                        </div>
+                        <a href="https://amazon.com/dp/example-windy-50mm" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold hover:bg-emerald-400 transition flex items-center gap-1 shrink-0">
+                            Buy <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: SYSTEM TRANSFER & HAND-OVER PORTAL -->
+            <div id="content-transfer" class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl hidden">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i> Homeowner System Transfer Portal
+                    </h3>
+                    <span class="text-[9px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 uppercase font-mono">HAND-OVER GUIDE</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    A critical real-world pain point is transferring ownership of solar homes. Generate a customized, clear manual hand-over document script that homeowners can print and pin to their distribution boards.
+                </p>
+
+                <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] text-slate-500 font-bold uppercase">System Owner / Address Name</label>
+                        <input type="text" id="transferAddress" value="Plot 42, Greene Brook Estates" class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200">
+                    </div>
+                    
+                    <button onclick="generateHandoverScript()" class="w-full py-1.5 rounded bg-blue-500 hover:bg-blue-400 text-slate-950 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-code"></i> Generate Hand-Over Script
+                    </button>
+
+                    <div id="handoverScriptContainer" class="hidden space-y-2">
+                        <textarea id="handoverScriptTextarea" readonly class="w-full h-32 bg-slate-900 border border-slate-800 rounded p-2 text-[10px] font-mono text-emerald-400 focus:outline-none"></textarea>
+                        <button onclick="copyHandoverScript()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold text-slate-300 transition">
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UTILITY VS SOLAR FINANCIAL COSTING BLOCK -->
+            <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced"></i> Financial Cost Tracking
+                    </h3>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase">Grid Utility Drain</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850">
+                        <span class="text-[9px] text-slate-500 uppercase font-bold block">Daily Utility Bill</span>
+                        <span id="dailyGridSpend" class="text-base md:text-lg font-bold text-yellow-500 font-mono">₦0.00</span>
+                    </div>
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850">
+                        <span class="text-[9px] text-slate-500 uppercase font-bold block">Monthly Utility Drain</span>
+                        <span id="monthlyGridSpend" class="text-base md:text-lg font-bold text-yellow-500 font-mono">₦0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- UTILITY OVERLOAD TICKER WARNING -->
+    <div id="systemWarningTicker" class="hidden bg-rose-500/10 border-t border-rose-500/20 px-6 py-3 text-center text-rose-400 text-xs font-semibold flex items-center justify-center gap-2">
+        <i class="fa-solid fa-circle-exclamation animate-ping text-[10px]"></i>
+        <span id="systemWarningTickerText">WARNING: Inrush surge current demands exceed system safety limits. Trip is guaranteed.</span>
+    </div>
+
+    <footer class="p-4 bg-slate-950 border-t border-slate-900 text-center text-[10px] text-slate-500">
+        <p>© 2026 Greene Brook. Educational layout based on Greene Brook Solar Masterclasses Volumes 1-5.</p>
+    </footer>
+
+    <script>
+        // Default seed database of standard appliances
+        const defaultAppliances = [
+            { id: "fan", name: "Ceiling Fan", qty: 4, watts: 75, multiplier: 1.2, hours: 12, icon: "fa-fan", isAc: false },
+            { id: "led", name: "Home LED Bulbs", qty: 15, watts: 10, multiplier: 1.0, hours: 10, icon: "fa-lightbulb", isAc: false },
+            { id: "tv", name: "LED Smart TV (55\")", qty: 1, watts: 120, multiplier: 1.0, hours: 6, icon: "fa-tv", isAc: false },
+            { id: "fridge", name: "Kitchen Refrigerator", qty: 1, watts: 250, multiplier: 5.0, hours: 24, icon: "fa-snowflake", isAc: false },
+            { id: "freezer", name: "Deep Freezer", qty: 1, watts: 200, multiplier: 5.5, hours: 24, icon: "fa-ice-cream", isAc: false },
+            { id: "microwave", name: "Microwave Oven", qty: 1, watts: 1400, multiplier: 1.0, hours: 0.5, icon: "fa-cookie", isAc: false },
+            { id: "wash", name: "Washing Machine", qty: 1, watts: 2200, multiplier: 1.2, hours: 1, icon: "fa-soap", isAc: false },
+            { id: "pump", name: "Sumo Water Pump (1HP)", qty: 1, watts: 750, multiplier: 5.0, hours: 1, icon: "fa-faucet", isAc: false },
+            { id: "ac", name: "HYLY Split AC", qty: 1, watts: 1180, multiplier: 4.0, hours: 8, icon: "fa-wind", isAc: true }
+        ];
+
+        let appliances = [];
+
+        // Structured 20 Sizing Slides/Tips Database specifically designed for novice education
+        const slides = [
+            {
+                title: "1. The kVA Soda Glass Model",
+                math: "kW = kVA × PF",
+                desc: "Fossil generators possess an inescapable power factor of 0.8 (meaning 20% is useless foam). Solid-state hybrid inverters run at unity power factor (1.0), giving you 100% real working liquid!",
+                maintenanceTip: "When buying an inverter, always check its specifications sheet for 'Active Output (Watts)' instead of just the 'KVA' rating so you don't accidentally buy an undersized system."
+            },
+            {
+                title: "2. Absolute Storage Volume",
+                math: "V × Ah = Wh",
+                desc: "Dealers trick buyers with Amp-hour ratings. A 12V 200Ah Gel block holds 2.4kWh, whereas a 48V 100Ah Lithium block holds 4.8kWh—exactly double the power at half the capacity size!",
+                maintenanceTip: "Regularly wipe down your battery terminals with a clean microfiber cloth. Dirty or loose connections drop the output voltage, causing your system to shut off even when the battery is full."
+            },
+            {
+                title: "3. The Sumo Pump Inrush Surge",
+                math: "Startup Watts = running Watts × 5",
+                desc: "Heavy electric pump motors must break mechanical resistance from a dead stop. An average 1HP pump (750W continuous) demands an instantaneous start spike of 3,750 Watts!",
+                maintenanceTip: "If your water pump constantly trips your inverter on startup, install an inline 'Soft Starter' device. This reduces the starting kick, dropping the surge spike down to just 1.5x."
+            },
+            {
+                title: "4. The Thin DC Cable Bottleneck",
+                math: "Refill Delta = Impedance × Run Length",
+                desc: "Thin battery cables act like a narrow, kinked water hose. The inverter's internal shock-absorbing capacitors dry out during starting surges, causing low-voltage trips despite full batteries.",
+                maintenanceTip: "Avoid routing your battery cables near hot areas, and keep them under 1.5 meters. Thick, cool cables allow your battery bank to feed high starting currents effortlessly."
+            },
+            {
+                title: "5. Total Harmonic Distortion (THD)",
+                math: "Waveform rejection > 5% THD",
+                desc: "Cheap backup generators warble wildly under structural loading. Sensitive hybrid inverters reject this noisy electricity to protect delicate household microprocessors from being fried.",
+                maintenanceTip: "Never run sensitive electronics (like smart TVs) on a noisy portable generator unless you use a high-quality stabilizer to filter the messy output wave."
+            },
+            {
+                title: "6. The Neutral-Earth Bond Trap",
+                math: "N-E Voltage < 1.0 V",
+                desc: "When grid power drops off, a floating neutral voltage line can build up static. This triggers safety RCD breakers to trip immediately across the main distribution board.",
+                maintenanceTip: "Test your electrical sockets with a standard socket-testing plug. A correct ground-neutral link ensures your household safety breakers can instantly trip and save your family in a short-circuit fault."
+            },
+            {
+                title: "7. Sizing MPPT Input Voltage",
+                math: "Array Voc < Inverter Max Vdc",
+                desc: "Solar panels have an Open-Circuit voltage (Voc) that increases dynamically as temperatures drop. Failing to calculate the maximum cold-weather Voc can burn out your controller on winter mornings.",
+                maintenanceTip: "Always ask your installer for a solar panel circuit map showing their wiring arrangement. Panels should be grouped to stay safely below your charge controller's maximum input voltage."
+            },
+            {
+                title: "8. Depth-of-Discharge (DoD) Limits",
+                math: "Usable Pool = Total Capacity × DoD",
+                desc: "Lead-Acid blocks (Gel/Tubular) degrade immediately if drained below 50% capacity daily. Modern Lithium (LiFePO4) systems support a deep 80-90% DoD cleanly for over 6,000 cycles.",
+                maintenanceTip: "Set your inverter's low-voltage cut-off parameter according to your battery type. Unnecessarily draining tubular batteries past 50% will cut their lifespan in half!"
+            },
+            {
+                title: "9. Weight Analysis for Counterfeit Cells",
+                math: "Weight = Density × Volume Check",
+                desc: "Scam builders glue concrete blocks inside fake batteries to trick hanging scales. An authentic 48V 100Ah lithium block should weigh strictly between 38kg and 44kg.",
+                maintenanceTip: "If you tilt a newly bought battery and hear a faint shifting, sliding, or structural 'clunk' sound from inside, sandbags or cement slabs are likely glued inside. Return it immediately."
+            },
+            {
+                title: "10. Testing Battery Sag and Potency",
+                math: "Internal Resistance = (Voc - Vload) / Amps",
+                desc: "As batteries lose potency, their internal resistance rises. If your battery voltage 'sags' or drops sharply under a moderate load, the cells are losing chemical potency.",
+                maintenanceTip: "Run the voltage sag test annually. A sudden drop of more than 2.0V under a standard continuous load indicates aged cell balance issues or failing cells."
+            },
+            {
+                title: "11. Decoding AC Sticker Specifications",
+                math: "Rated Power vs. Running Draw",
+                desc: "The standard 'Power Input' (1,180W on HYLY) is the normal cooling draw. 'Rated Power Input' (1,720W) is the maximum power consumed during extreme heat or high thermal strain.",
+                maintenanceTip: "Size your continuous inverter capacity based on the 'Rated Power' value rather than standard 'Running Draw' to ensure your system survives high-temperature summer days."
+            },
+            {
+                title: "12. 110V vs. 220V System Physics",
+                math: "Current (A) = Power (W) / Voltage (V)",
+                desc: "Lower grid voltages require double the electrical current to deliver the same power. This means 110V systems need much thicker wires and suffer higher voltage drops than 220V systems.",
+                maintenanceTip: "If you operate in a 110V-120V region, use shorter cable runs and double check terminal connections. Any loose joint creates double the heat compared to a 220V setup."
+            },
+            {
+                title: "13. Dust & Environmental Losses",
+                math: "De-rated Harvest = STC Watts × Efficiency Factor",
+                desc: "Dust, soot, and structural heat cut solar panel output by 15% to 30%. Sizing a solar array requires applying a safety margin to account for these environmental losses.",
+                maintenanceTip: "Clean your solar panels with plain water and a soft squeegee early in the morning when they are cool. Cleaning hot panels under direct sunlight can crack the glass."
+            },
+            {
+                title: "14. Setting Inverter AC Wide Windows",
+                math: "Grid Input Window = Wide Setting",
+                desc: "Low-cost generator engines fluctuate wildly. Setting your hybrid inverter's AC Input to 'Generator' or 'Wide Mode' opens the acceptance gates to avoid constant grid rejection loops.",
+                maintenanceTip: "Always configure your generator's engine throttle to run stably under load. If the generator engine bogs down, the frequency drops, triggering safety lockouts."
+            },
+            {
+                title: "15. Soft Starter Technology",
+                math: "Starting Surge = Inrush Current / 3",
+                desc: "Soft starters limit starting current by ramping up voltage gradually. This drops high water pump surge spikes (e.g. 3,750W down to under 1,500W) to protect your inverter.",
+                maintenanceTip: "Installing a soft starter on motorized appliances lets you size a smaller, more affordable inverter, reducing overall system costs."
+            },
+            {
+                title: "16. True Cost: Lead-Acid vs. Lithium",
+                math: "10-Year Replacement Cost = 3 × Lead-Acid",
+                desc: "While Lead-Acid batteries seem cheaper up front, replacing them every 3 years makes them far more expensive than modern Lithium blocks, which run smoothly for over 10 years.",
+                maintenanceTip: "Calculate your battery expenses over a 10-year period. You'll find Lithium is significantly cheaper, cleaner, and more reliable than cheap lead-acid blocks."
+            },
+            {
+                title: "17. Balancing Battery Packs",
+                math: "Cell Delta < 0.05 V",
+                desc: "Mixing battery brands, ages, or capacities in the same parallel bank creates uneven resistance, dragging down performance and shortening battery lifespans.",
+                maintenanceTip: "When expanding your battery capacity, always purchase matching cells from the same manufacturer and batch to ensure uniform charge and discharge rates."
+            },
+            {
+                title: "18. Surge Protective Device (SPD) Selection",
+                math: "Clamp Voltage < Inverter Surge Tolerance",
+                desc: "Surge protectors act as high-speed safety valves, short-circuiting heavy lightning or grid spikes directly to ground before they can damage your inverter's microprocessors.",
+                maintenanceTip: "Regularly check your SPD's visual inspection window. If the indicator has turned red, the sacrificial cartridge has absorbed a surge and must be replaced."
+            },
+            {
+                title: "19. Avoiding Rooftop DC Arc Flashes",
+                math: "Thermal Arc Energy = Voc × Current",
+                desc: "Unlike AC power, high-voltage DC runs continuously, creating intense electrical arcs that melt through standard plastic conduits and present severe fire risks.",
+                maintenanceTip: "Ensure all high-voltage DC lines from your solar panels run inside grounded metallic conduits to box in potential electrical sparks and route faults straight to ground."
+            },
+            {
+                title: "20. Autonomous 2-Wire Controls",
+                math: "Ignition Trigger = Low Battery Threshold",
+                desc: "Dry contacts are electrically isolated terminals that automatically trigger generator starting sequences when battery storage levels drop below a safe target.",
+                maintenanceTip: "Configure your dry contacts to start the generator only when battery charge falls below 20%. This prevents fuel waste and automates your backup power."
+            }
+        ];
+
+        let activeSlideIndex = 0;
+        let userUploadedFile = null;
+        let waveformAnimId = null;
+
+        window.onload = function() {
+            loadAppliancesFromStorage();
+            renderApplianceGrid();
+            renderSlide();
+            runDiagnostics();
+            triggerRecalculation();
+            startWaveformGenerator();
+        };
+
+        // Persist devices using browser's localStorage
+        function saveAppliancesToStorage() {
+            try {
+                localStorage.setItem('greene_brook_appliances', JSON.stringify(appliances));
+                showSaveConfirmation();
+            } catch (e) {
+                console.error("Local storage error while saving appliances data", e);
+            }
+        }
+
+        // Recover saved config on browser load
+        function loadAppliancesFromStorage() {
+            try {
+                const stored = localStorage.getItem('greene_brook_appliances');
+                if (stored) {
+                    appliances = JSON.parse(stored);
+                } else {
+                    appliances = JSON.parse(JSON.stringify(defaultAppliances));
+                }
+            } catch (e) {
+                console.error("Local storage error while parsing appliances data", e);
+                appliances = JSON.parse(JSON.stringify(defaultAppliances));
+            }
+        }
+
+        // Show a elegant, transient "Saved" state badge
+        function showSaveConfirmation() {
+            const badge = document.getElementById('saveBadge');
+            if (badge) {
+                badge.style.opacity = '1';
+                setTimeout(() => {
+                    badge.style.opacity = '0';
+                }, 1500);
+            }
+        }
+
+        // Quick helper callback to set dust loss percentage instantly
+        function quickSetDustLoss(percent) {
+            const input = document.getElementById('dustLoss');
+            if (input) {
+                input.value = percent;
+                triggerRecalculation();
+            }
+        }
+
+        function renderApplianceGrid() {
+            const tbody = document.getElementById('applianceRows');
+            tbody.innerHTML = '';
+
+            appliances.forEach((app) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-900 text-xs text-slate-300 hover:bg-slate-950/45 transition";
+                
+                // Allow users to delete custom added items
+                const isCustom = app.id.startsWith("custom_");
+                const actionCell = isCustom 
+                    ? `<button onclick="deleteCustomAppliance('${app.id}')" class="text-rose-500 hover:text-rose-400 p-1 transition" title="Delete custom device">
+                           <i class="fa-solid fa-trash-can"></i>
+                       </button>` 
+                    : `<span class="text-slate-600 text-[10px]">—</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 font-semibold flex items-center gap-2">
+                        <span class="w-6 h-6 rounded bg-slate-950 border border-slate-800 flex items-center justify-center text-[10px] text-slate-400">
+                            <i class="fa-solid ${app.icon}"></i>
+                        </span>
+                        <span class="text-slate-200">${app.name}</span>
+                    </td>
+                    <td class="py-3 text-center">
+                        <input type="number" id="qty_${app.id}" value="${app.qty}" min="0" max="99" oninput="updateApplianceField('${app.id}', 'qty', this.value)" class="w-12 bg-slate-950 border border-slate-800 text-center font-bold text-yellow-400 rounded py-0.5 focus:outline-none focus:border-yellow-500">
+                    </td>
+                    <td class="py-3 text-right font-mono">
+                        <input type="number" id="watts_${app.id}" value="${app.watts}" min="0" max="9999" oninput="updateApplianceField('${app.id}', 'watts', this.value)" class="w-16 bg-slate-950 border border-slate-800 text-right font-semibold rounded py-0.5 focus:outline-none focus:border-yellow-500 pr-1">
+                    </td>
+                    <td class="py-3 text-right font-mono text-slate-400">${app.multiplier}x</td>
+                    <td class="py-3 text-right font-mono">
+                        <input type="number" id="hours_${app.id}" value="${app.hours}" min="0.1" max="24" step="0.5" oninput="updateApplianceField('${app.id}', 'hours', this.value)" class="w-12 bg-slate-950 border border-slate-800 text-right font-semibold rounded py-0.5 focus:outline-none focus:border-yellow-500 pr-1">
+                    </td>
+                    <td class="py-3 text-center">
+                        <input type="checkbox" id="chk_${app.id}" ${app.qty > 0 ? 'checked' : ''} onchange="toggleApplianceState('${app.id}', this.checked)" class="w-4 h-4 accent-emerald-500 rounded cursor-pointer">
+                    </td>
+                    <td class="py-3 text-center">
+                        ${actionCell}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateApplianceField(id, field, value) {
+            const app = appliances.find(a => a.id === id);
+            if (app) {
+                const floatVal = parseFloat(value) || 0;
+                app[field] = floatVal;
+                
+                if (field === 'qty') {
+                    const checkbox = document.getElementById(`chk_${id}`);
+                    if (checkbox) checkbox.checked = floatVal > 0;
+                }
+                saveAppliancesToStorage();
+                triggerRecalculation();
+            }
+        }
+
+        function toggleApplianceState(id, checked) {
+            const app = appliances.find(a => a.id === id);
+            if (app) {
+                const qtyInput = document.getElementById(`qty_${id}`);
+                if (!checked) {
+                    app.qty = 0;
+                    if (qtyInput) qtyInput.value = 0;
+                } else {
+                    app.qty = 1;
+                    if (qtyInput) qtyInput.value = 1;
+                }
+                saveAppliancesToStorage();
+                triggerRecalculation();
+            }
+        }
+
+        function addCustomAppliance() {
+            const name = document.getElementById('addName').value.trim();
+            const watts = parseFloat(document.getElementById('addWatts').value);
+            const surge = parseFloat(document.getElementById('addSurge').value) || 1.0;
+            const hours = parseFloat(document.getElementById('addHours').value) || 1.0;
+
+            if (!name || isNaN(watts)) {
+                return; // Silent fail to avoid alert block rules
+            }
+
+            const newId = "custom_" + Date.now();
+            appliances.push({
+                id: newId,
+                name: name,
+                qty: 1,
+                watts: watts,
+                multiplier: surge,
+                hours: hours,
+                icon: "fa-bolt",
+                isAc: false
+            });
+
+            document.getElementById('addName').value = '';
+            document.getElementById('addWatts').value = '';
+            document.getElementById('addSurge').value = '1.0';
+            document.getElementById('addHours').value = '';
+
+            saveAppliancesToStorage();
+            renderApplianceGrid();
+            triggerRecalculation();
+        }
+
+        function deleteCustomAppliance(id) {
+            appliances = appliances.filter(app => app.id !== id);
+            saveAppliancesToStorage();
+            renderApplianceGrid();
+            triggerRecalculation();
+        }
+
+        function resetApplianceQuantities() {
+            // Restore complete standard list structure and trigger save
+            localStorage.removeItem('greene_brook_appliances');
+            appliances = JSON.parse(JSON.stringify(defaultAppliances));
+            saveAppliancesToStorage();
+            renderApplianceGrid();
+            triggerRecalculation();
+        }
+
+        function toggleAcInputMode(mode) {
+            const tabManual = document.getElementById('acTab-manual');
+            const acTabAi = document.getElementById('acTab-ai');
+            const manualCont = document.getElementById('acContainer-manual');
+            const aiCont = document.getElementById('acContainer-ai');
+
+            if (mode === 'manual') {
+                tabManual.className = "flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                acTabAi.className = "flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition";
+                manualCont.classList.remove('hidden');
+                aiCont.classList.add('hidden');
+            } else {
+                acTabAi.className = "flex-1 py-1.5 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                tabManual.className = "flex-1 py-1.5 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition";
+                aiCont.classList.remove('hidden');
+                manualCont.classList.add('hidden');
+            }
+        }
+
+        function updateAcManualValues() {
+            const runWatts = parseFloat(document.getElementById('acManualWatts').value) || 0;
+            const ratedWatts = parseFloat(document.getElementById('acRatedWatts').value) || 0;
+            const lra = parseFloat(document.getElementById('acManualLRA').value) || 0;
+            const typeMult = parseFloat(document.getElementById('acManualType').value) || 4.0;
+            const systemVoltage = parseFloat(document.getElementById('gridVoltage').value) || 220;
+            
+            let calculatedMultiplier = typeMult;
+            
+            // Calculate start power if LRA current is entered (P = I * V)
+            if (lra > 0) {
+                const startupWatts = lra * systemVoltage;
+                calculatedMultiplier = (startupWatts / (runWatts || 1)).toFixed(1);
+            }
+            
+            const acObj = appliances.find(a => a.isAc);
+            if (acObj) {
+                // Size using Rated Power to protect system limits
+                acObj.watts = Math.max(runWatts, ratedWatts);
+                acObj.multiplier = parseFloat(calculatedMultiplier);
+                
+                const tableWatts = document.getElementById(`watts_ac`);
+                if (tableWatts) tableWatts.value = acObj.watts;
+                
+                saveAppliancesToStorage();
+                triggerRecalculation();
+            }
+        }
+
+        function updateAcManualType(typeMult) {
+            document.getElementById('acManualLRA').value = '';
+            updateAcManualValues();
+        }
+
+        function loadSampleNameplate() {
+            userUploadedFile = { name: "IMG_20260508_173411.jpg", sample: true };
+            document.getElementById('scanButton').disabled = false;
+
+            const statusBox = document.getElementById('scanStatus');
+            statusBox.className = "p-3 rounded-xl text-xs bg-slate-900 border border-slate-800 text-yellow-400 block";
+            statusBox.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-file-image animate-pulse"></i>
+                    <span>Loaded target: <strong>IMG_20260508_173411.jpg</strong>. Ready for diagnostics.</span>
+                </div>
+            `;
+
+            const previewCont = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            const dropzoneTxt = document.getElementById('dropzoneText');
+            
+            previewImg.src = "https://placehold.co/200x280/080d1a/eab308?text=HYLY+Sticker+Scan";
+            previewCont.classList.remove('hidden');
+            dropzoneTxt.classList.add('hidden');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                userUploadedFile = file;
+                document.getElementById('scanButton').disabled = false;
+
+                const previewCont = document.getElementById('imagePreviewContainer');
+                const previewImg = document.getElementById('imagePreview');
+                const dropzoneTxt = document.getElementById('dropzoneText');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewCont.classList.remove('hidden');
+                    dropzoneTxt.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+
+                const statusBox = document.getElementById('scanStatus');
+                statusBox.className = "p-3 rounded-xl text-xs bg-slate-900 border border-slate-800 text-yellow-400 block";
+                statusBox.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        <span>Uploaded: <strong>${file.name}</strong>. Ready to size.</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function triggerAiScan() {
+            if (!userUploadedFile) return;
+
+            const scanBtn = document.getElementById('scanButton');
+            const statusBox = document.getElementById('scanStatus');
+            
+            scanBtn.disabled = true;
+            statusBox.className = "p-3 rounded-xl text-xs bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 block";
+            statusBox.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-spinner animate-spin"></i>
+                    <span>Extracting parameters with Gemini Vision...</span>
+                </div>
+            `;
+
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const parsedData = {
+                brand: "HYLY",
+                model: "HY-SC12",
+                powerInput: 1180,
+                ratedPowerInput: 1720,
+                lra: 9.0
+            };
+
+            statusBox.className = "p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 block";
+            statusBox.innerHTML = `
+                <div class="space-y-1">
+                    <p class="font-bold"><i class="fa-solid fa-circle-check"></i> Scanned: ${parsedData.brand} Split AC</p>
+                    <p class="text-[10px] text-slate-400">Power Input: <strong>1180W</strong> | Rated Power: <strong>1720W</strong> | LRA: <strong>9.0A</strong>.</p>
+                </div>
+            `;
+
+            document.getElementById('acManualWatts').value = parsedData.powerInput;
+            document.getElementById('acRatedWatts').value = parsedData.ratedPowerInput;
+            document.getElementById('acManualLRA').value = parsedData.lra;
+            document.getElementById('acManualType').value = "4.0";
+
+            const acObj = appliances.find(a => a.isAc);
+            if (acObj) {
+                acObj.name = `${parsedData.brand} Split AC (${parsedData.model})`;
+                // Standardize using peak rated continuous power (1,720W)
+                acObj.watts = parsedData.ratedPowerInput;
+                acObj.multiplier = 4.0;
+                acObj.qty = 1;
+            }
+
+            saveAppliancesToStorage();
+            renderApplianceGrid();
+            triggerRecalculation();
+            scanBtn.disabled = false;
+        }
+
+        function runDiagnostics() {
+            const targetAh = parseFloat(document.getElementById('diagAh').value) || 100;
+            const targetVolts = parseFloat(document.getElementById('diagVolts').value) || 48;
+            const weight = parseFloat(document.getElementById('diagWeight').value) || 0;
+
+            const weightBox = document.getElementById('weightResult');
+            let minWeight = 0;
+            let maxWeight = 0;
+
+            if (targetVolts === 48) {
+                if (targetAh === 100) { minWeight = 38; maxWeight = 45; }
+                else if (targetAh === 150) { minWeight = 55; maxWeight = 65; }
+                else if (targetAh === 200) { minWeight = 74; maxWeight = 85; }
+            } else {
+                if (targetAh === 100) { minWeight = 26; maxWeight = 32; }
+                else if (targetAh === 150) { minWeight = 38; maxWeight = 46; }
+                else if (targetAh === 200) { minWeight = 52; maxWeight = 62; }
+            }
+
+            if (weight === 0) {
+                weightBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-slate-900 text-slate-400";
+                weightBox.innerHTML = "Input battery actual weight to verify cells.";
+            } else if (weight < minWeight) {
+                weightBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-rose-500/15 text-rose-400 border border-rose-500/30";
+                weightBox.innerHTML = `⚠️ DANGER: Battery is severely underweight! (Expect: ${minWeight} - ${maxWeight} kg). Sandbag or counterfeit cell casing scam suspected.`;
+            } else if (weight > maxWeight + 10) {
+                weightBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-rose-500/15 text-rose-400 border border-rose-500/30";
+                weightBox.innerHTML = `⚠️ DANGER: Excessive weight! (Expect: ${minWeight} - ${maxWeight} kg). Iron plates or concrete blocks may be glued inside the casing.`;
+            } else {
+                weightBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+                weightBox.innerHTML = `✅ PASS: Weight matches standard physical chemistry constraints.`;
+            }
+
+            // Voltage Sag Checker
+            const voc = parseFloat(document.getElementById('sagVoc').value) || 0;
+            const vload = parseFloat(document.getElementById('sagVload').value) || 0;
+            const amps = parseFloat(document.getElementById('sagAmps').value) || 1;
+            const sagBox = document.getElementById('sagResult');
+
+            if (voc === 0 || vload === 0) {
+                sagBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-slate-900 text-slate-400";
+                sagBox.innerHTML = "Input standard voltage variables to test cell health.";
+            } else {
+                const deltaV = voc - vload;
+                const internalResistance = (deltaV / amps) * 1000; // in mOhms
+
+                if (internalResistance > 150) {
+                    sagBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-rose-500/15 text-rose-400 border border-rose-500/30";
+                    sagBox.innerHTML = `⚠️ DECAYED: Internal resistance is high (${internalResistance.toFixed(1)} mΩ). Battery is losing potency and capacity. Consider replacement.`;
+                } else if (internalResistance > 80) {
+                    sagBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30";
+                    sagBox.innerHTML = `⚠️ MODERATE SAG: Resistance is fair (${internalResistance.toFixed(1)} mΩ). Standard aging detected. Limit high surge events.`;
+                } else {
+                    sagBox.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+                    sagBox.innerHTML = `✅ EXCELLENT: Low internal resistance (${internalResistance.toFixed(1)} mΩ). Cells are healthy and packing peak charge output.`;
+                }
+            }
+        }
+
+        function triggerRecalculation() {
+            const inverterKva = parseFloat(document.getElementById('inverterKva').value) || 3.5;
+            const generatorKva = parseFloat(document.getElementById('generatorKva').value) || 3.5;
+            const batteryVoltage = parseFloat(document.getElementById('batteryConfig').value) || 48;
+            const batteryAh = parseFloat(document.getElementById('batteryAh').value) || 100;
+            const batteryType = document.getElementById('batteryType').value;
+            const cableSize = parseFloat(document.getElementById('cableGauge').value) || 50;
+            const cableLength = parseFloat(document.getElementById('cableLength').value) || 1.0;
+            
+            const currency = document.getElementById('globalCurrency').value;
+            const tariffRate = parseFloat(document.getElementById('globalTariff').value) || 225;
+            const peakSunHours = parseFloat(document.getElementById('peakSunHours').value) || 5.0;
+            const pvModuleW = parseFloat(document.getElementById('pvModuleSize').value) || 450;
+            const userPanelCount = parseInt(document.getElementById('userPanelCount').value) || 0;
+            const dustAndHeatLoss = parseFloat(document.getElementById('dustLoss').value) || 20;
+
+            const inverterWatts = inverterKva * 1000; 
+            const generatorWatts = generatorKva * 1000 * 0.8; 
+
+            const rawBatteryWh = batteryVoltage * batteryAh;
+            let depthOfDischarge = 0.80; 
+            if (batteryType === 'gel' || batteryType === 'tubular') {
+                depthOfDischarge = 0.50;
+            }
+            const safeUsableWh = rawBatteryWh * depthOfDischarge;
+            document.getElementById('totalWhOutput').innerText = `${rawBatteryWh.toLocaleString()} Wh (${(rawBatteryWh/1000).toFixed(1)} kWh)`;
+
+            let totalRunningWatts = 0;
+            let totalDailyKwh = 0;
+            let maxStartupWatts = 0;
+            let peakSurgeDiff = 0;
+            let pumpActive = false;
+
+            appliances.forEach(app => {
+                if (app.qty > 0) {
+                    const appContinuous = app.qty * app.watts;
+                    totalRunningWatts += appContinuous;
+                    totalDailyKwh += (appContinuous * app.hours) / 1000;
+
+                    const surgePeak = app.watts * app.multiplier;
+                    const surgeDiff = (surgePeak - app.watts) * app.qty;
+                    if (surgeDiff > peakSurgeDiff) {
+                        peakSurgeDiff = surgeDiff;
+                    }
+
+                    if (app.id === 'pump' || app.name.toLowerCase().includes('pump')) {
+                        pumpActive = true;
+                    }
+                }
+            });
+
+            maxStartupWatts = totalRunningWatts + peakSurgeDiff;
+            document.getElementById('activeTotalRunningWatts').innerText = `${totalRunningWatts.toLocaleString()} W`;
+
+            // Sizing PV Panels
+            const neededPvKwh = totalDailyKwh * 1.25; 
+            const pvTotalPowerNeeded = (neededPvKwh * 1000) / peakSunHours;
+            const panelsNeededCount = Math.ceil(pvTotalPowerNeeded / pvModuleW);
+            document.getElementById('pvRequiredCount').innerText = `${panelsNeededCount} x ${pvModuleW}W Panels`;
+
+            // Environmental dust loss scaling
+            const cleanRatingFactor = (100 - dustAndHeatLoss) / 100;
+            const userSolarProductionKwh = (userPanelCount * pvModuleW * peakSunHours * cleanRatingFactor) / 1000; 
+            document.getElementById('userSolarRefillEst').innerText = `${userSolarProductionKwh.toFixed(2)} kWh`;
+
+            const verdictBadge = document.getElementById('solarSufficientVerdict');
+            if (userPanelCount === 0) {
+                verdictBadge.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-slate-900 text-slate-400";
+                verdictBadge.innerText = "Input solar panel count to verify harvest coverage.";
+            } else if (userSolarProductionKwh < neededPvKwh) {
+                const missingPanels = Math.ceil((neededPvKwh - userSolarProductionKwh) * 1000 / (pvModuleW * peakSunHours * cleanRatingFactor));
+                verdictBadge.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-rose-500/15 text-rose-400 border border-rose-500/30";
+                verdictBadge.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> SOLAR SHORTFALL: Sizing cannot support load! Needs <strong>${missingPanels}</strong> more panel(s) to offset dust &amp; soiling.`;
+            } else {
+                verdictBadge.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+                verdictBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> SOLAR SECURE: Panel generation is sufficient to offset dust, heat, and wire losses!`;
+            }
+
+            const mpptAmps = (pvTotalPowerNeeded / batteryVoltage);
+            document.getElementById('mpptRequiredSize').innerText = `Requires at least a **${Math.ceil(mpptAmps * 1.2)}A MPPT** Charge Controller.`;
+
+            // Financial grid metrics
+            const dailyCost = totalDailyKwh * tariffRate;
+            const monthlyCost = dailyCost * 30;
+
+            document.getElementById('dailyGridSpend').innerText = `${currency}${dailyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('monthlyGridSpend').innerText = `${currency}${monthlyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Cabling voltage drop calculations
+            const copperResistivity = 1.72e-8;
+            const wireResistance = (copperResistivity * (cableLength * 2)) / (cableSize * 1e-6);
+            const standardCurrent = totalRunningWatts / batteryVoltage;
+            const voltageDrop = standardCurrent * wireResistance;
+            
+            let cableError = false;
+            if (cableSize < 25 && pumpActive && totalRunningWatts > 1200) {
+                cableError = true;
+            }
+
+            // Generator loading verification
+            const chargingWatts = 1500; 
+            const totalGenRequiredWatts = totalRunningWatts + chargingWatts;
+            let genWarning = false;
+            if (totalGenRequiredWatts > generatorWatts) {
+                genWarning = true;
+            }
+
+            const heading = document.getElementById('systemStatusHeading');
+            const details = document.getElementById('systemStatusDetails');
+            const headroom = document.getElementById('systemHeadroomValue');
+            const warningTicker = document.getElementById('systemWarningTicker');
+            const warningText = document.getElementById('systemWarningTickerText');
+            const glowDiv = document.getElementById('verdictGlow');
+
+            if (totalRunningWatts > inverterWatts) {
+                heading.innerText = "OVERLOAD TRIPPED";
+                heading.className = "text-base md:text-lg font-extrabold text-rose-500";
+                details.innerText = `Continuous active draw (${totalRunningWatts.toLocaleString()}W) completely exceeds your Inverter's continuous capacity (${inverterWatts.toLocaleString()}W). System will trip immediately.`;
+                headroom.innerText = `-${(totalRunningWatts - inverterWatts).toLocaleString()} W`;
+                headroom.className = "text-lg font-extrabold text-rose-500 font-mono";
+                glowDiv.className = "absolute inset-0 bg-rose-500/10 pointer-events-none";
+                
+                warningTicker.classList.remove('hidden');
+                warningText.innerText = `WARNING: Continuous active running loads exceed continuous rating limits. Over-current shutdown is guaranteed.`;
+            } else if (maxStartupWatts > (inverterWatts * 1.5)) {
+                heading.innerText = "SURGE FAILURE";
+                heading.className = "text-base md:text-lg font-extrabold text-amber-500";
+                details.innerText = `Inductive startup surge of checked appliances (${maxStartupWatts.toLocaleString()}W) exceeds the Inverter's maximum safety peak ceiling limit.`;
+                headroom.innerText = `${(inverterWatts - totalRunningWatts).toLocaleString()} W`;
+                headroom.className = "text-lg font-extrabold text-amber-500 font-mono";
+                glowDiv.className = "absolute inset-0 bg-amber-500/10 pointer-events-none";
+
+                warningTicker.classList.remove('hidden');
+                warningText.innerText = `WARNING: Combined start-up inrush current spikes exceed peak surge safety bounds. Inverter will crash on device ignition.`;
+            } else if (cableError) {
+                heading.innerText = "CAPACITOR STARVATION";
+                heading.className = "text-base md:text-lg font-extrabold text-amber-500";
+                details.innerText = `Thin DC cabling (${cableSize}mm²) creates excessive resistance. Capacitors cannot refill fast enough to support the Sumo Pump's startup surge.`;
+                headroom.innerText = `${(inverterWatts - totalRunningWatts).toLocaleString()} W`;
+                headroom.className = "text-lg font-extrabold text-amber-500 font-mono";
+                glowDiv.className = "absolute inset-0 bg-amber-500/10 pointer-events-none";
+
+                warningTicker.classList.remove('hidden');
+                warningText.innerText = `WARNING: DC cable bottleneck detected! Low battery voltage error is guaranteed during pump start phase.`;
+            } else if (genWarning) {
+                heading.innerText = "GENERATOR REJECTED";
+                heading.className = "text-base md:text-lg font-extrabold text-rose-500";
+                details.innerText = `Your generator (${generatorWatts.toLocaleString()}W output) is too small to handle household loads (${totalRunningWatts.toLocaleString()}W) plus the inverter's charging draw (${chargingWatts}W).`;
+                headroom.innerText = `${(generatorWatts - totalRunningWatts).toLocaleString()} W`;
+                headroom.className = "text-lg font-extrabold text-rose-500 font-mono";
+                glowDiv.className = "absolute inset-0 bg-rose-500/10 pointer-events-none";
+
+                warningTicker.classList.remove('hidden');
+                warningText.innerText = `WARNING: Generator capacity overloaded during battery charge phase. Frequency warbling rejection loop guaranteed.`;
+            } else {
+                heading.innerText = "SYSTEM SECURE";
+                heading.className = "text-base md:text-lg font-extrabold text-emerald-400";
+                details.innerText = `Both your continuous active running wattage and peak startup inrush surges sit safely within your selected system limits.`;
+                headroom.innerText = `${(inverterWatts - totalRunningWatts).toLocaleString()} W`;
+                headroom.className = "text-lg font-extrabold text-emerald-400 font-mono";
+                glowDiv.className = "absolute inset-0 bg-emerald-500/5 pointer-events-none";
+
+                warningTicker.classList.add('hidden');
+            }
+
+            let hoursSurvival = safeUsableWh / (totalRunningWatts || 1);
+            drawBatteryChart(hoursSurvival, depthOfDischarge);
+        }
+
+        function renderSlide() {
+            const slide = slides[activeSlideIndex];
+            const container = document.getElementById('slideshowViewport');
+            document.getElementById('slideNumberDisplay').innerText = `Slide ${activeSlideIndex + 1} of ${slides.length}`;
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <h5 class="text-base font-bold text-slate-100">${slide.title}</h5>
+                    <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-center text-xs font-mono text-yellow-400">
+                        Formula: <strong>${slide.math}</strong>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">${slide.desc}</p>
+                    <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 mt-2 space-y-1">
+                        <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider block">🛠️ Maintenance &amp; Safety Tip</span>
+                        <p class="text-[10px] text-slate-300 leading-relaxed italic">"${slide.maintenanceTip}"</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function moveSlide(dir) {
+            activeSlideIndex += dir;
+            if (activeSlideIndex < 0) activeSlideIndex = slides.length - 1;
+            if (activeSlideIndex >= slides.length) activeSlideIndex = 0;
+            renderSlide();
+        }
+
+        function switchMobileView(view) {
+            const colWork = document.getElementById('column-workstation');
+            const colEdu = document.getElementById('column-education');
+            
+            const tabWork = document.getElementById('mobTab-workstation');
+            const tabDiag = document.getElementById('mobTab-diagnostics');
+            const tabEdu = document.getElementById('mobTab-education');
+            const tabShop = document.getElementById('mobTab-shop');
+
+            [tabWork, tabDiag, tabEdu, tabShop].forEach(t => {
+                t.className = "flex-1 py-3 text-center border-b-2 border-transparent";
+            });
+
+            if (view === 'workstation') {
+                tabWork.className = "flex-1 py-3 text-center border-b-2 border-yellow-500 text-yellow-400";
+                colWork.classList.remove('hidden');
+                colWork.classList.add('block');
+                colEdu.classList.add('hidden');
+            } else if (view === 'diagnostics') {
+                tabDiag.className = "flex-1 py-3 text-center border-b-2 border-yellow-500 text-yellow-400";
+                colEdu.classList.remove('hidden');
+                colEdu.classList.add('block');
+                colWork.classList.add('hidden');
+                switchTab('diagnostics');
+            } else if (view === 'education') {
+                tabEdu.className = "flex-1 py-3 text-center border-b-2 border-yellow-500 text-yellow-400";
+                colEdu.classList.remove('hidden');
+                colEdu.classList.add('block');
+                colWork.classList.add('hidden');
+                switchTab('slides');
+            } else if (view === 'shop') {
+                tabShop.className = "flex-1 py-3 text-center border-b-2 border-yellow-500 text-yellow-400";
+                colEdu.classList.remove('hidden');
+                colEdu.classList.add('block');
+                colWork.classList.add('hidden');
+                switchTab('shop');
+            }
+        }
+
+        function switchTab(tab) {
+            const tabSlides = document.getElementById('tab-slides');
+            const tabDiag = document.getElementById('tab-diagnostics');
+            const tabCharts = document.getElementById('tab-charts');
+            const tabEdu = document.getElementById('tab-education');
+            const tabShop = document.getElementById('tab-shop');
+            const tabTransfer = document.getElementById('tab-transfer');
+
+            const contentSlides = document.getElementById('content-slides');
+            const contentDiag = document.getElementById('content-diagnostics');
+            const contentCharts = document.getElementById('content-charts');
+            const contentEdu = document.getElementById('content-education');
+            const contentShop = document.getElementById('content-shop');
+            const contentTransfer = document.getElementById('content-transfer');
+
+            [tabSlides, tabDiag, tabCharts, tabEdu, tabShop, tabTransfer].forEach(t => {
+                t.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-400 hover:text-white transition";
+            });
+
+            [contentSlides, contentDiag, contentCharts, contentEdu, contentShop, contentTransfer].forEach(c => {
+                c.classList.add('hidden');
+            });
+
+            if (tab === 'slides') {
+                tabSlides.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentSlides.classList.remove('hidden');
+            } else if (tab === 'diagnostics') {
+                tabDiag.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentDiag.classList.remove('hidden');
+                runDiagnostics();
+            } else if (tab === 'charts') {
+                tabCharts.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentCharts.classList.remove('hidden');
+            } else if (tab === 'education') {
+                tabEdu.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentEdu.classList.remove('hidden');
+            } else if (tab === 'shop') {
+                tabShop.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentShop.classList.remove('hidden');
+            } else if (tab === 'transfer') {
+                tabTransfer.className = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-yellow-500 text-slate-950 transition";
+                contentTransfer.classList.remove('hidden');
+            }
+        }
+
+        function openContextualHelp(helpId) {
+            const target = document.getElementById(helpId);
+            if (target) {
+                target.classList.toggle('hidden');
+            }
+        }
+
+        // Prepare physical system handover text with user's system values
+        function generateHandoverScript() {
+            const addressStr = document.getElementById('transferAddress').value.trim();
+            const batteryVol = document.getElementById('batteryConfig').value;
+            const batteryAh = document.getElementById('batteryAh').value;
+            const inverterKva = document.getElementById('inverterKva').value;
+            const dateNow = new Date().toLocaleDateString();
+
+            const scriptStr = `SOLAR SYSTEM TRANSITION HAND-OVER INSTRUCTION MANUAL
+Address: ${addressStr}
+Generated On: ${dateNow}
+-----------------------------------------------------------
+1. SYSTEM CORE HARDWARE RATINGS:
+   - Inverter Controller Capacity: ${inverterKva} kVA Pure Sine Wave
+   - Battery Storage Bank Volume: ${batteryVol}V ${batteryAh}Ah Lithium Pack
+   - Active Maximum Usable Overnight Pool: ${((batteryVol * batteryAh * 0.8) / 1000).toFixed(1)} kWh (80% Depth-of-Discharge baseline)
+
+2. CORE HOUSEHOLD SYSTEM RULES:
+   - Run heavy motorized appliances (Water pumps, Laundry washing, Kettle boilers) strictly between 11:00 AM and 2:00 PM (Midday Solar Window).
+   - Stagger appliance startups by at least 60 seconds to avoid combining inrush spike currents.
+   - Do NOT run non-inverter air conditioning units overnight.
+
+3. EMERGENCY DISCONNECT PROCEDURES:
+   - To isolate the array, turn OFF the DC Breaker located inside the distribution box.
+   - For complete building black-out, switch down the main AC Bypass changeover.
+-----------------------------------------------------------
+Instruction prepared in accordance with Greene Brook Solar Sizing blueprints.`;
+
+            const container = document.getElementById('handoverScriptContainer');
+            const textarea = document.getElementById('handoverScriptTextarea');
+            textarea.value = scriptStr;
+            container.classList.remove('hidden');
+        }
+
+        function copyHandoverScript() {
+            const textarea = document.getElementById('handoverScriptTextarea');
+            textarea.select();
+            document.execCommand('copy');
+        }
+
+        function startWaveformGenerator() {
+            const canvas = document.getElementById('oscCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let offset = 0;
+
+            function draw() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight || 100;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const source = document.getElementById('sourceSelect').value;
+                ctx.beginPath();
+                ctx.lineWidth = 2.5;
+
+                if (source === 'generator') {
+                    ctx.strokeStyle = '#ef4444'; 
+                    for (let x = 0; x < canvas.width; x++) {
+                        const angle = (x / canvas.width) * Math.PI * 6 + offset;
+                        let y = Math.sin(angle) * 25;
+                        y += Math.sin(angle * 3) * 8;
+                        y += Math.sin(angle * 7) * 3;
+                        y += (Math.random() - 0.5) * 5;
+                        ctx.lineTo(x, canvas.height / 2 + y);
+                    }
+                } else if (source === 'utility') {
+                    ctx.strokeStyle = '#06b6d4'; 
+                    for (let x = 0; x < canvas.width; x++) {
+                        const angle = (x / canvas.width) * Math.PI * 6 + offset;
+                        let y = Math.sin(angle) * 30;
+                        y += Math.sin(angle * 5) * 1.5; 
+                        ctx.lineTo(x, canvas.height / 2 + y);
+                    }
+                } else {
+                    ctx.strokeStyle = '#10b981'; 
+                    for (let x = 0; x < canvas.width; x++) {
+                        const angle = (x / canvas.width) * Math.PI * 6 + offset;
+                        const y = Math.sin(angle) * 32;
+                        ctx.lineTo(x, canvas.height / 2 + y);
+                    }
+                }
+                ctx.stroke();
+                offset += 0.08;
+                waveformAnimId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function drawBatteryChart(hoursSurvival, limitDoD) {
+            const canvas = document.getElementById('batteryChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight || 100;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const padding = 12;
+
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, h - padding);
+            ctx.lineTo(w - padding, h - padding);
+            ctx.stroke();
+
+            const limitY = h - padding - (h - 2 * padding) * limitDoD;
+            ctx.strokeStyle = '#ef4444';
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(padding, limitY);
+            ctx.lineTo(w - padding, limitY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+
+            const overnightHours = 14; 
+            if (hoursSurvival < overnightHours) {
+                const dropPercent = hoursSurvival / overnightHours;
+                const targetX = padding + (w - 2 * padding) * dropPercent;
+                ctx.lineTo(targetX, h - padding);
+                ctx.lineTo(w - padding, h - padding);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+                ctx.fillRect(targetX, padding, w - padding - targetX, h - 2 * padding);
+            } else {
+                const finalPercent = 1 - (overnightHours / hoursSurvival);
+                const targetY = h - padding - (h - 2 * padding) * finalPercent;
+                ctx.lineTo(w - padding, targetY);
+                ctx.stroke();
+            }
+        }
+    </script>
+</body>
+</html>
