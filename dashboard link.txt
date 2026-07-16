@@ -1,3 +1,0 @@
-Get access to the Smart Energy dashboard using the link below:
-
-https://energy-management-inky.vercel.app/
