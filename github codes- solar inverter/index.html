@@ -200,9 +200,21 @@
                     </div>
                 </div>
 
-                <!-- Live Cable Thermal & Solar Thermal metrics -->
-                <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-[10px] text-slate-400">
+                <!-- Live Cable Thermal, Solar Thermal & DC Current metrics -->
+                <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl space-y-2 text-[10px] text-slate-400">
+                    <div class="flex justify-between items-center border-b border-slate-900 pb-1.5">
+                        <span class="font-semibold text-slate-300 uppercase tracking-wide text-[9px]"><i class="fa-solid fa-gauge text-yellow-500 mr-1"></i>Battery Amps Diagnostic Specs:</span>
+                        <span class="text-[8px] text-slate-500 font-bold uppercase">Safe Testing Parameters</span>
+                    </div>
                     <div class="flex justify-between items-center">
+                        <span>DC Current Draw on Battery Bank:</span>
+                        <span id="dcCurrentDrawnValue" class="font-bold text-yellow-400 font-mono">0.00 Amps</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Required Multimeter / Shunt Limit:</span>
+                        <span id="recommendedShuntValue" class="font-bold text-yellow-400 font-mono">Min 100A Rating</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1 border-t border-slate-900">
                         <span>Cable Thermal Power Loss (Heat Dissipated):</span>
                         <span id="cableHeatLossValue" class="font-bold text-rose-400 font-mono">0.00 W</span>
                     </div>
@@ -437,7 +449,7 @@
                 </div>
 
                 <!-- Equation Box explaining solar sizing in plain English -->
-                <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 text-xs leading-relaxed space-y-3">
+                <div class="p-4 bg-slate-950 rounded-xl border border-slate-855 text-xs leading-relaxed space-y-3">
                     <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wide block">Clear English Solar Sizing Formulas:</span>
                     
                     <div class="space-y-2 border-l-2 border-emerald-500 pl-3">
@@ -466,7 +478,7 @@
                             <option class="bg-slate-950 text-slate-200" value="300">300W Poly Panel</option>
                         </select>
                     </div>
-                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl">
+                    <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl">
                         <span class="text-[9px] text-slate-500 uppercase font-bold block">Calculated Panel Qty Needed</span>
                         <span id="pvRequiredCount" class="text-sm font-extrabold text-emerald-400 block mt-1 font-mono">0 Panels</span>
                     </div>
@@ -574,6 +586,7 @@
                     <h3 class="text-xs font-bold text-yellow-400 uppercase tracking-widest">Inverter Signal waves</h3>
                     <select id="sourceSelect" onchange="triggerRecalculation()" class="bg-slate-950 border border-slate-800 text-[10px] font-semibold text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-yellow-500">
                         <option value="inverter">Inverter (Pure Sine Wave)</option>
+                        <option value="utility" selected>Grid Utility (High Inertia PLL Lock)</option>
                         <option value="generator">Fossil Generator (THD Distortion)</option>
                     </select>
                 </div>
@@ -587,7 +600,7 @@
                         <canvas id="oscCanvas" class="w-full h-28 block bg-slate-950"></canvas>
                     </div>
 
-                    <!-- Filter Setting Control (Act I fix) -->
+                    <!-- Filter Setting Control -->
                     <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-xs">
                         <div class="flex justify-between items-center">
                             <span class="text-slate-300 font-semibold">Inverter AC Filter Mode Setting:</span>
@@ -601,7 +614,7 @@
                         </p>
                     </div>
 
-                    <!-- Act II dry contact automation simulator -->
+                    <!-- 2-wire dry contact automation simulator -->
                     <div class="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-3">
                         <span class="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5">
                             <i class="fa-solid fa-microchip"></i> 2-Wire Dry Contact Relay Automation
@@ -706,28 +719,28 @@
                 </div>
 
                 <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1 text-xs">
-                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex justify-between items-center gap-3">
+                    <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl flex justify-between items-center gap-3">
                         <div class="space-y-1">
                             <span class="font-bold text-slate-100 block">Sunsynk 5kW Hybrid Inverter</span>
                             <p class="text-[10px] text-slate-400 leading-relaxed">Handles heavy inductive startup surges cleanly.</p>
                         </div>
                         <a href="https://amazon.com/dp/example-sunsynk-5kw" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold shrink-0">Buy</a>
                     </div>
-                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex justify-between items-center gap-3">
+                    <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl flex justify-between items-center gap-3">
                         <div class="space-y-1">
                             <span class="font-bold text-slate-100 block">Deye 48V 100Ah Lithium Bank</span>
                             <p class="text-[10px] text-slate-400 leading-relaxed font-semibold">Bluetooth Smart BMS, Grade-A Prismatic cells.</p>
                         </div>
                         <a href="https://amazon.com/dp/example-deye-lithium" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold shrink-0">Buy</a>
                     </div>
-                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex justify-between items-center gap-3">
+                    <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl flex justify-between items-center gap-3">
                         <div class="space-y-1">
                             <span class="font-bold text-slate-100 block">Dehn AC Surge Protective SPD</span>
                             <p class="text-[10px] text-slate-400 leading-relaxed">Sacrificial safety valve shielding your electronics from lightning spikes.</p>
                         </div>
                         <a href="https://amazon.com/dp/example-dehn-spd" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold shrink-0">Buy</a>
                     </div>
-                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex justify-between items-center gap-3">
+                    <div class="p-3 bg-slate-950 border border-slate-855 rounded-xl flex justify-between items-center gap-3">
                         <div class="space-y-1">
                             <span class="font-bold text-slate-100 block">WindyNation 50mm² Battery Cable</span>
                             <p class="text-[10px] text-slate-400 leading-relaxed font-semibold">Thick 100% pure copper core preventing voltage drops during heavy water pump startups.</p>
@@ -778,16 +791,16 @@
                 </div>
                 <div class="space-y-3 text-xs text-slate-400">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-850">
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-855">
                             <span class="text-[9px] text-slate-500 uppercase font-bold block">AC Current Drawn</span>
                             <span id="acCurrentDrawn" class="text-sm font-extrabold text-slate-200 font-mono">0.00 Amps</span>
                         </div>
-                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-850">
+                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-855">
                             <span class="text-[9px] text-slate-500 uppercase font-bold block">Recommended Copper AC Cable</span>
                             <span id="recommendedAcCable" class="text-sm font-extrabold text-emerald-400 font-mono">1.5 mm²</span>
                         </div>
                     </div>
-                    <div id="voltageCurrentExplanation" class="p-2.5 bg-slate-950 rounded-xl text-[10px] leading-relaxed text-slate-400 border border-slate-850">
+                    <div id="voltageCurrentExplanation" class="p-2.5 bg-slate-950 rounded-xl text-[10px] leading-relaxed text-slate-400 border border-slate-855">
                         At 220V, household current is standard. Keep joints tight.
                     </div>
                 </div>
@@ -802,11 +815,11 @@
                     <span class="text-[9px] text-slate-500 font-bold uppercase">Grid Utility Drain</span>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850">
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-855">
                         <span class="text-[9px] text-slate-500 uppercase font-bold block">Daily Utility Bill Equivalent</span>
                         <span id="dailyGridSpend" class="text-sm md:text-base font-bold text-yellow-500 font-mono">₦0.00</span>
                     </div>
-                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-850">
+                    <div class="p-4 bg-slate-950 rounded-xl border border-slate-855">
                         <span class="text-[9px] text-slate-500 uppercase font-bold block">Monthly Utility Drain</span>
                         <span id="monthlyGridSpend" class="text-sm md:text-base font-bold text-yellow-500 font-mono">₦0.00</span>
                     </div>
@@ -898,10 +911,10 @@
                 tip: "Avoid running expensive gaming PCs or smart appliances directly on a cheap backup generator without a dedicated voltage regulator."
             },
             {
-                title: "10. The Neutral-Earth Bond Trap",
-                math: "Ground Line Safety = Ground-to-Neutral Voltage must stay under 1.0 Volt",
-                desc: "When grid power drops off, a floating neutral line can build up static. This triggers safety RCD breakers to trip immediately across the main distribution board.",
-                tip: "Have a certified electrician verify that your hybrid inverter creates a dynamic, safe neutral-earth bond during backup mode."
+                title: "15. Decoding AC Sticker Specs",
+                math: "Worst-Case Load Sizing = Maximum Rated Power Input (not typical Cooling Input)",
+                desc: "The standard 'Power Input' is the normal cooling draw. 'Rated Power Input' is the maximum power consumed during extreme heat or high thermal strain.",
+                tip: "Size your continuous inverter capacity based on the 'Rated Power' value rather than standard 'Running Draw' to survive hot summer days."
             },
             {
                 title: "11. Sizing MPPT Controller Input",
@@ -928,10 +941,10 @@
                 tip: "Run a loaded voltage test annually. A sudden drop of more than 2.0V under a standard continuous load indicates aged cell balance issues."
             },
             {
-                title: "15. Decoding AC Sticker Specs",
-                math: "Worst-Case Load Sizing = Maximum Rated Power Input (not typical Cooling Input)",
-                desc: "The standard 'Power Input' is the normal cooling draw. 'Rated Power Input' is the maximum power consumed during extreme heat or high thermal strain.",
-                tip: "Size your continuous inverter capacity based on the 'Rated Power' value rather than standard 'Running Draw' to survive hot summer days."
+                title: "10. The Neutral-Earth Bond Trap",
+                math: "Ground Line Safety = Ground-to-Neutral Voltage must stay under 1.0 Volt",
+                desc: "When grid power drops off, a floating neutral line can build up static. This triggers safety RCD breakers to trip immediately across the main distribution board.",
+                tip: "Have a certified electrician verify that your hybrid inverter creates a dynamic, safe neutral-earth bond during backup mode."
             },
             {
                 title: "16. 110V vs. 220V System Physics",
@@ -1732,7 +1745,7 @@
                 voltageCurrentExplanationEl.innerHTML = explanation;
             }
 
-            // DC Cabling Thermal Calculations
+            // DC Cabling Thermal and Load Current Calculations
             const copperResistivity = 1.72e-8;
             const copperTempCoeff = 0.00393;
             const rBase = (copperResistivity * (cableLength * 2)) / (cableSize * 1e-6);
@@ -1741,7 +1754,21 @@
             const voltageDrop = standardCurrent * rTemp;
             const cablePowerLossWatts = (standardCurrent * standardCurrent) * rTemp;
 
+            // Update newly integrated DC ammeter spec outputs
+            document.getElementById('dcCurrentDrawnValue').innerText = `${standardCurrent.toFixed(1)} Amps DC`;
             document.getElementById('cableHeatLossValue').innerText = `${cablePowerLossWatts.toFixed(2)} Watts`;
+
+            let recommendedShuntText = "Min 100A Shunt / Multimeter";
+            if (standardCurrent > 400) {
+                recommendedShuntText = "Min 600A Heavy-Duty Shunt / Clamp";
+            } else if (standardCurrent > 200) {
+                recommendedShuntText = "Min 400A Shunt / Heavy Clamp";
+            } else if (standardCurrent > 80) {
+                recommendedShuntText = "Min 200A Shunt / Standard Clamp";
+            } else {
+                recommendedShuntText = "Min 100A Shunt / Standard Clamp";
+            }
+            document.getElementById('recommendedShuntValue').innerText = recommendedShuntText;
 
             const thermalWarningBox = document.getElementById('thermalWarningBox');
             if (thermalWarningBox) {
@@ -1785,6 +1812,9 @@
                         rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
                         rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ACCEPTED BY INVERTER (Generator Mode)`;
                     }
+                } else if (source === 'utility') {
+                    rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 animate-pulse";
+                    rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-nodes mr-1"></i> GRID PHASE-LOCKED (50Hz / 60Hz Sync)`;
                 } else {
                     rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
                     rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> PURE SINE WAVE STABLE`;
@@ -2024,28 +2054,33 @@
                 });
 
                 ctx.beginPath();
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2.5;
 
                 if (source === 'generator') {
-                    ctx.strokeStyle = '#f59e0b'; 
-                    // High household loading causes physical engines to bog down (frequency warble)
+                    ctx.strokeStyle = '#ef4444'; // Red showing mechanical THD distortion
                     const loadRatio = Math.min(1.5, totalRunningWatts / Math.max(1, generatorWatts));
-                    const jitterAmt = loadRatio * 15; // Jitter amplitude correlates to engine bogging
+                    const jitterAmt = loadRatio * 15; 
 
                     for (let x = 0; x < canvas.width; x++) {
                         const baseAngle = (x / canvas.width) * Math.PI * 6 + offset;
-                        // Inject random jitter + lower frequency warble shifts
                         const speedBogFactor = 1 + Math.sin(offset * 0.2) * (loadRatio * 0.15);
                         const angle = baseAngle * speedBogFactor;
 
-                        let y = Math.sin(angle) * 30;
-                        y += Math.sin(angle * 3) * 10; // Harmonic noise
-                        y += (Math.random() - 0.5) * jitterAmt; // High-frequency spark/combustion noise
+                        let y = Math.sin(angle) * 25;
+                        y += Math.sin(angle * 3) * 8; 
+                        y += (Math.random() - 0.5) * jitterAmt; 
                         
                         ctx.lineTo(x, canvas.height / 2 + y);
                     }
+                } else if (source === 'utility') {
+                    ctx.strokeStyle = '#06b6d4'; // Cyan showing highly stable Grid wave (PLL lock)
+                    for (let x = 0; x < canvas.width; x++) {
+                        const angle = (x / canvas.width) * Math.PI * 6 + offset;
+                        const y = Math.sin(angle) * 32;
+                        ctx.lineTo(x, canvas.height / 2 + y);
+                    }
                 } else {
-                    ctx.strokeStyle = '#10b981'; 
+                    ctx.strokeStyle = '#10b981'; // Green showing pure solid-state inverter sine wave
                     for (let x = 0; x < canvas.width; x++) {
                         const angle = (x / canvas.width) * Math.PI * 6 + offset;
                         const y = Math.sin(angle) * 35;
