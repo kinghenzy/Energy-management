@@ -50,7 +50,7 @@
         </div>
         
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-wrap items-center justify-center gap-2 md:gap-4 w-full lg:w-auto">
-          <!-- System Voltage Toggle (Fixed reference error) -->
+          <!-- System Voltage Toggle -->
           <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
             <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Voltage:</span>
             <select id="gridVoltage" onchange="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none cursor-pointer">
@@ -577,11 +577,51 @@
                         <option value="generator">Fossil Generator (THD Distortion)</option>
                     </select>
                 </div>
+                
                 <div class="grid grid-cols-1 gap-4">
                     <div class="bg-slate-950 rounded-xl p-2 h-40 flex flex-col justify-between border border-slate-850">
-                        <span class="text-[9px] text-slate-500 uppercase font-bold">Total Harmonic Distortion (Oscilloscope View)</span>
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-[9px] text-slate-500 uppercase font-bold">Total Harmonic Distortion (Oscilloscope View)</span>
+                            <div id="rejectionBadge" class="text-[9px] px-1.5 py-0.5 rounded font-bold font-mono"></div>
+                        </div>
                         <canvas id="oscCanvas" class="w-full h-28 block bg-slate-950"></canvas>
                     </div>
+
+                    <!-- Filter Setting Control (Act I fix) -->
+                    <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300 font-semibold">Inverter AC Filter Mode Setting:</span>
+                            <select id="inverterFilterMode" onchange="triggerRecalculation()" class="bg-slate-900 border border-slate-800 text-yellow-400 font-bold rounded px-2 py-1 text-[11px]">
+                                <option value="ups" selected>UPS strict setting (Window: 49Hz - 51Hz)</option>
+                                <option value="wide">Wide Generator setting (Window: 45Hz - 55Hz)</option>
+                            </select>
+                        </div>
+                        <p class="text-[9px] text-slate-500 leading-tight">
+                            ℹ️ UPS mode rejects waves with high Total Harmonic Distortion (THD) or speed-change frequency warbles. Open the filter to Generator mode to accept fuel generators.
+                        </p>
+                    </div>
+
+                    <!-- Act II dry contact automation simulator -->
+                    <div class="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-3">
+                        <span class="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5">
+                            <i class="fa-solid fa-microchip"></i> 2-Wire Dry Contact Relay Automation
+                        </span>
+                        <p class="text-[10px] text-slate-400 leading-relaxed">
+                            Simulate connecting a low-voltage 2-wire signal line from your hybrid inverter directly to your key-start fuel generator to trigger automatic start/stop charging loops.
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[9px] text-slate-500 mb-1 font-semibold uppercase">Start Gen at SoC (%)</label>
+                                <input type="number" id="dryContactStartThreshold" value="20" min="10" max="50" oninput="triggerRecalculation()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-yellow-400 font-mono focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-slate-500 mb-1 font-semibold uppercase">Stop Gen at SoC (%)</label>
+                                <input type="number" id="dryContactStopThreshold" value="80" min="60" max="100" oninput="triggerRecalculation()" class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-yellow-400 font-mono focus:outline-none">
+                            </div>
+                        </div>
+                        <div id="dryContactStatus" class="p-2.5 rounded-lg text-xs text-center font-bold font-mono"></div>
+                    </div>
+
                     <div class="bg-slate-950 rounded-xl p-2 h-40 flex flex-col justify-between border border-slate-850">
                         <span class="text-[9px] text-slate-500 uppercase font-bold">Overnight Load Decay Model</span>
                         <canvas id="batteryChart" class="w-full h-28 block bg-slate-950"></canvas>
@@ -690,7 +730,7 @@
                     <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl flex justify-between items-center gap-3">
                         <div class="space-y-1">
                             <span class="font-bold text-slate-100 block">WindyNation 50mm² Battery Cable</span>
-                            <p class="text-[10px] text-slate-400 leading-relaxed">Thick 100% pure copper core preventing voltage drops during heavy water pump startups.</p>
+                            <p class="text-[10px] text-slate-400 leading-relaxed font-semibold">Thick 100% pure copper core preventing voltage drops during heavy water pump startups.</p>
                         </div>
                         <a href="https://amazon.com/dp/example-windy-50mm" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold shrink-0">Buy</a>
                     </div>
@@ -720,7 +760,7 @@
                     </button>
 
                     <div id="handoverScriptContainer" class="hidden space-y-2">
-                        <textarea id="handoverScriptTextarea" readonly class="w-full h-32 bg-slate-900 border border-slate-800 rounded p-2 text-[10px] font-mono text-emerald-400 focus:outline-none"></textarea>
+                        <textarea id="handoverScriptTextarea" readonly class="w-full h-48 bg-slate-900 border border-slate-800 rounded p-2 text-[10px] font-mono text-emerald-400 focus:outline-none"></textarea>
                         <button onclick="copyHandoverScript()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-semibold text-slate-300 transition">
                             Copy to Clipboard
                         </button>
@@ -1031,7 +1071,10 @@
                     sagVload: document.getElementById('sagVload').value,
                     sagAmps: document.getElementById('sagAmps').value,
                     transferAddress: document.getElementById('transferAddress').value,
-                    sourceSelect: document.getElementById('sourceSelect').value
+                    sourceSelect: document.getElementById('sourceSelect').value,
+                    inverterFilterMode: document.getElementById('inverterFilterMode').value,
+                    dryContactStartThreshold: document.getElementById('dryContactStartThreshold').value,
+                    dryContactStopThreshold: document.getElementById('dryContactStopThreshold').value
                 };
                 localStorage.setItem('greene_brook_settings_v3', JSON.stringify(settings));
             } catch (e) {
@@ -1077,6 +1120,9 @@
                     if (s.sagAmps !== undefined) document.getElementById('sagAmps').value = s.sagAmps;
                     if (s.transferAddress !== undefined) document.getElementById('transferAddress').value = s.transferAddress;
                     if (s.sourceSelect !== undefined) document.getElementById('sourceSelect').value = s.sourceSelect;
+                    if (s.inverterFilterMode !== undefined) document.getElementById('inverterFilterMode').value = s.inverterFilterMode;
+                    if (s.dryContactStartThreshold !== undefined) document.getElementById('dryContactStartThreshold').value = s.dryContactStartThreshold;
+                    if (s.dryContactStopThreshold !== undefined) document.getElementById('dryContactStopThreshold').value = s.dryContactStopThreshold;
                 }
             } catch (e) {
                 console.error("Local storage settings loading error", e);
@@ -1630,6 +1676,7 @@
             document.getElementById('dailyGridSpend').innerText = `${currency}${dailyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             document.getElementById('monthlyGridSpend').innerText = `${currency}${monthlyCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
+            // Cabling and Grid System Safety indicators
             const systemVoltage = parseFloat(document.getElementById('gridVoltage').value) || 220;
             const acCurrent = totalRunningWatts / systemVoltage;
             
@@ -1685,6 +1732,7 @@
                 voltageCurrentExplanationEl.innerHTML = explanation;
             }
 
+            // DC Cabling Thermal Calculations
             const copperResistivity = 1.72e-8;
             const copperTempCoeff = 0.00393;
             const rBase = (copperResistivity * (cableLength * 2)) / (cableSize * 1e-6);
@@ -1720,6 +1768,51 @@
                 genWarning = true;
             }
 
+            // Act I Filter and Rejection calculations
+            const source = document.getElementById('sourceSelect').value;
+            const filterMode = document.getElementById('inverterFilterMode').value;
+            const rejectionBadge = document.getElementById('rejectionBadge');
+            let isWaveRejected = false;
+
+            if (rejectionBadge) {
+                if (source === 'generator') {
+                    // Generator has high speed fluctuations/Harmonics (THD)
+                    if (filterMode === 'ups') {
+                        isWaveRejected = true;
+                        rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                        rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> REJECTED BY INVERTER (UPS Mode)`;
+                    } else {
+                        rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                        rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ACCEPTED BY INVERTER (Generator Mode)`;
+                    }
+                } else {
+                    rejectionBadge.className = "text-[9px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    rejectionBadge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> PURE SINE WAVE STABLE`;
+                }
+            }
+
+            // Act II 2-wire dry contact relay state engine
+            const startTh = parseFloat(document.getElementById('dryContactStartThreshold').value) || 20;
+            const stopTh = parseFloat(document.getElementById('dryContactStopThreshold').value) || 80;
+            const dryContactStatus = document.getElementById('dryContactStatus');
+
+            if (dryContactStatus) {
+                if (totalRunningWatts === 0) {
+                    dryContactStatus.className = "p-2.5 rounded-lg text-xs text-center font-bold font-mono bg-slate-950 text-slate-500 border border-slate-900";
+                    dryContactStatus.innerText = "Relay Idle: No active household load running.";
+                } else {
+                    // Simulate State of charge decay under current load
+                    const dischargeHours = safeUsableWh / totalRunningWatts;
+                    if (dischargeHours < 4) {
+                        dryContactStatus.className = "p-2.5 rounded-lg text-xs text-center font-bold font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse";
+                        dryContactStatus.innerHTML = `<i class="fa-solid fa-toggle-on text-amber-400 mr-1.5 animate-bounce"></i> RELAY CLOSED (Triggered at ${startTh}%): Starting generator automatically...`;
+                    } else {
+                        dryContactStatus.className = "p-2.5 rounded-lg text-xs text-center font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                        dryContactStatus.innerHTML = `<i class="fa-solid fa-toggle-off text-emerald-400 mr-1.5"></i> RELAY OPEN: Battery secure. Auto-start trigger armed at ${startTh}% SoC.`;
+                    }
+                }
+            }
+
             const heading = document.getElementById('systemStatusHeading');
             const details = document.getElementById('systemStatusDetails');
             const headroom = document.getElementById('systemHeadroomValue');
@@ -1747,6 +1840,16 @@
 
                 warningTicker.classList.remove('hidden');
                 warningText.innerText = `WARNING: Combined startup inrush current spikes exceed peak surge safety bounds.`;
+            } else if (isWaveRejected) {
+                heading.innerText = "GRID SOURCE REJECTED";
+                heading.className = "text-base md:text-lg font-extrabold text-rose-500";
+                details.innerText = `Your pickiest filter settings (UPS Mode) are rejecting the generator's THD and warble spikes. The mechanical wave cannot connect to charge batteries.`;
+                headroom.innerText = `0 W`;
+                headroom.className = "text-lg font-extrabold text-rose-500 font-mono";
+                glowDiv.className = "absolute inset-0 bg-rose-500/10 pointer-events-none";
+
+                warningTicker.classList.remove('hidden');
+                warningText.innerText = `WARNING: Inverter is rejecting incoming mechanical power source due to strict frequency tracking limits. Switch filter to Generator mode.`;
             } else {
                 heading.innerText = "SYSTEM SECURE";
                 heading.className = "text-base md:text-lg font-extrabold text-emerald-400";
@@ -1912,15 +2015,33 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
                 const source = document.getElementById('sourceSelect').value;
+                const generatorKva = parseFloat(document.getElementById('generatorKva').value) || 3.5;
+                const generatorWatts = generatorKva * 1000 * 0.8; 
+
+                let totalRunningWatts = 0;
+                appliances.forEach(app => {
+                    if (app.qty > 0) totalRunningWatts += (app.qty * app.watts);
+                });
+
                 ctx.beginPath();
                 ctx.lineWidth = 2;
 
                 if (source === 'generator') {
                     ctx.strokeStyle = '#f59e0b'; 
+                    // High household loading causes physical engines to bog down (frequency warble)
+                    const loadRatio = Math.min(1.5, totalRunningWatts / Math.max(1, generatorWatts));
+                    const jitterAmt = loadRatio * 15; // Jitter amplitude correlates to engine bogging
+
                     for (let x = 0; x < canvas.width; x++) {
-                        const angle = (x / canvas.width) * Math.PI * 6 + offset;
+                        const baseAngle = (x / canvas.width) * Math.PI * 6 + offset;
+                        // Inject random jitter + lower frequency warble shifts
+                        const speedBogFactor = 1 + Math.sin(offset * 0.2) * (loadRatio * 0.15);
+                        const angle = baseAngle * speedBogFactor;
+
                         let y = Math.sin(angle) * 30;
-                        y += Math.sin(angle * 3) * 10; 
+                        y += Math.sin(angle * 3) * 10; // Harmonic noise
+                        y += (Math.random() - 0.5) * jitterAmt; // High-frequency spark/combustion noise
+                        
                         ctx.lineTo(x, canvas.height / 2 + y);
                     }
                 } else {
@@ -1992,31 +2113,60 @@
         }
 
         function generateHandoverScript() {
-            const addressStr = document.getElementById('transferAddress').value.trim();
+            const addressStr = document.getElementById('transferAddress').value.trim() || "Unspecified Property";
             const batteryVol = document.getElementById('batteryConfig').value;
             const batteryAh = document.getElementById('batteryAh').value;
             const inverterKva = document.getElementById('inverterKva').value;
+            
+            const batteryTypeSelect = document.getElementById('batteryType');
+            const batteryTypeName = batteryTypeSelect.options[batteryTypeSelect.selectedIndex].text;
+            
+            const userPanelCount = document.getElementById('userPanelCount').value;
+            const pvModuleW = document.getElementById('pvModuleSize').value;
+            
+            // Calculate actual checklist demands
+            let totalRunningWatts = 0;
+            let activeItems = [];
+            appliances.forEach(app => {
+                if (app.qty > 0) {
+                    totalRunningWatts += (app.qty * app.watts);
+                    activeItems.push(`  - ${app.name} (Qty: ${app.qty}, Continuous: ${app.watts}W, Surge Profile: ${app.multiplier}x)`);
+                }
+            });
+
+            const dailyKwh = document.getElementById('totalDailyKwhText').innerText;
+            const cableSize = document.getElementById('cableGauge').value;
             const dateNow = new Date().toLocaleDateString();
 
             const scriptStr = `SOLAR SYSTEM TRANSITION HAND-OVER INSTRUCTION MANUAL
-Address: ${addressStr}
-Generated On: ${dateNow}
+Property/Address: ${addressStr}
+Transition Document Prepared On: ${dateNow}
 -----------------------------------------------------------
-1. SYSTEM CORE HARDWARE RATINGS:
-   - Inverter Controller Capacity: ${inverterKva} kVA Pure Sine Wave
-   - Battery Storage Bank Volume: ${batteryVol}V ${batteryAh}Ah Lithium Pack
-   - Active Maximum Usable Overnight Pool: ${((batteryVol * batteryAh * 0.8) / 1000).toFixed(1)} kWh (80% Depth-of-Discharge baseline)
+1. SYSTEM CORE HARDWARE CONFIGURATION & SPECS:
+   - Inverter Continuous Rating: ${inverterKva} kVA Pure Sine Wave
+   - Battery Storage Pack: ${batteryVol}V ${batteryAh}Ah (${batteryTypeName})
+   - Total System Storage Capacity: ${((batteryVol * batteryAh) / 1000).toFixed(1)} kWh
+   - Usable Pool Threshold: ${document.getElementById('usablePoolDetails')?.innerText || "Calculated based on DoD"}
+   - Battery Enclosure DC Cable run: ${cableSize} mm² Copper Lines
+   - Rooftop Solar PV Generation: ${userPanelCount} x ${pvModuleW}W Modules (Estimated Daily Harvest: ${document.getElementById('userSolarRefillEst')?.innerText || "0.00 kWh"})
 
-2. CORE HOUSEHOLD SYSTEM RULES:
-   - Run heavy motorized appliances (Water pumps, Laundry washing, Kettle boilers) strictly between 11:00 AM and 2:00 PM (Midday Solar Window).
-   - Stagger appliance startups by at least 60 seconds to avoid combining inrush spike currents.
-   - Do NOT run non-inverter air conditioning units overnight.
+2. PRIMARY OPERATIONAL RULES FOR INSTALLED LOAD CHECKLIST:
+   - Your continuous household load currently runs at: ${totalRunningWatts}W.
+   - Calculated Daily Energy Target: ${dailyKwh}.
+   Your system runs highly customized rules based on active checklist loads:
+${activeItems.length > 0 ? activeItems.join('\n') : "  (No active appliances set in sizing checklist yet.)"}
 
-3. EMERGENCY DISCONNECT PROCEDURES:
-   - To isolate the array, turn OFF the DC Breaker located inside the distribution box.
-   - For complete building black-out, switch down the main AC Bypass changeover.
+   - CRITICAL USAGE RULES:
+     * Stagger high-load startups. Do NOT turn on inductive devices (like pumps and AC) at the exact same time.
+     * Always operate high-energy thermal appliances (like water pumps, boilers, or laundry) during Peak Daylight hours to absorb solar generation directly.
+     * In overcast weather, reduce evening consumption to avoid deep-cycle battery exhaustion.
+
+3. GRID-FAILURE / EMERGENCY DISCONNECT & GENERATOR INTERFACES:
+   - To charge the battery via fuel generator, verify the inverter AC setting is set to "Generator / Wide Mode" to avoid engine speed-wave (THD) rejection loops.
+   - If Dry Contact relay wiring is active: Generator will automatically ignite when battery capacity falls. Do not place objects near the motor exhaust.
+   - Disconnect sequences: Open the main DC circuit breaker inside the enclosure, then turn off the AC input isolator.
 -----------------------------------------------------------
-Instruction prepared in accordance with Greene Brook Solar Sizing blueprints.`;
+Operational guidelines generated in accordance with Greene Brook Solar Sizing Blueprints.`;
 
             const container = document.getElementById('handoverScriptContainer');
             const textarea = document.getElementById('handoverScriptTextarea');
