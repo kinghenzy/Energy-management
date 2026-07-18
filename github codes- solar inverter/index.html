@@ -50,10 +50,10 @@
         </div>
         
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-wrap items-center justify-center gap-2 md:gap-4 w-full lg:w-auto">
-          <!-- System Voltage Toggle -->
+          <!-- System Voltage Toggle (Fixed reference error) -->
           <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
             <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Voltage:</span>
-            <select id="gridVoltage" onchange="triggerRecalculation(); updateAcManualValues();" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none cursor-pointer">
+            <select id="gridVoltage" onchange="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none cursor-pointer">
               <option class="bg-slate-950 text-slate-200" value="220" selected>220V (EU/NG)</option>
               <option class="bg-slate-950 text-slate-200" value="110">110V (US/CA)</option>
             </select>
@@ -78,6 +78,12 @@
           <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10">
             <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5">Sun Hrs:</span>
             <input type="number" id="peakSunHours" value="5.0" min="2" max="10" step="0.5" oninput="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none w-10 text-right font-mono">
+          </div>
+          <!-- Ambient Temp Selector -->
+          <div class="flex items-center justify-between lg:justify-start bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 h-10 col-span-2 sm:col-span-1">
+            <span class="text-[10px] md:text-xs text-slate-400 font-semibold mr-1.5"><i class="fa-solid fa-temperature-half text-rose-400 mr-1"></i>Temp:</span>
+            <input type="number" id="ambientTemp" value="25" min="15" max="60" step="1" oninput="triggerRecalculation()" class="bg-transparent text-[10px] md:text-xs text-yellow-400 font-bold focus:outline-none w-10 text-right font-mono">
+            <span class="text-[10px] text-yellow-400 font-bold ml-0.5">°C</span>
           </div>
         </div>
     </header>
@@ -163,6 +169,7 @@
                     </div>
                 </div>
 
+                <!-- Autonomy Card Widget -->
                 <div class="p-3.5 bg-slate-950 border border-slate-850 rounded-xl flex items-center justify-between gap-4">
                     <div class="space-y-1">
                         <span class="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Est. Battery Backup Autonomy</span>
@@ -178,7 +185,7 @@
                     <div>
                         <div class="flex items-center gap-1.5">
                             <label class="block text-[10px] text-slate-400 mb-1 font-semibold uppercase">DC Cable Size</label>
-                            <span class="text-[9px] text-yellow-400 cursor-help" title="DC cables must be thick to prevent voltage drops during inrush spikes."><i class="fa-solid fa-circle-question"></i></span>
+                            <span class="text-[9px] text-yellow-400 cursor-help" title="DC cables must be thick to prevent voltage drops during starting inrush surges."><i class="fa-solid fa-circle-question"></i></span>
                         </div>
                         <select id="cableGauge" onchange="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
                             <option value="16">16 mm² (Thin Core)</option>
@@ -192,23 +199,39 @@
                         <input type="number" id="cableLength" value="1.0" min="0.5" max="5.0" step="0.1" oninput="triggerRecalculation()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-yellow-500 transition">
                     </div>
                 </div>
+
+                <!-- Live Cable Thermal & Solar Thermal metrics -->
+                <div class="p-3 bg-slate-950 border border-slate-850 rounded-xl space-y-2 text-[10px] text-slate-400">
+                    <div class="flex justify-between items-center">
+                        <span>Cable Thermal Power Loss (Heat Dissipated):</span>
+                        <span id="cableHeatLossValue" class="font-bold text-rose-400 font-mono">0.00 W</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Solar Cell Temperature Loss De-rating:</span>
+                        <span id="solarDeRatingValue" class="font-bold text-rose-400 font-mono">0.0%</span>
+                    </div>
+                    <div id="thermalWarningBox" class="hidden p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded text-[9px] leading-tight font-semibold">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
             </div>
 
+            <!-- Box 2: Domestic Sizing Checklist -->
             <div class="bg-slate-900/40 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4 shadow-xl">
                 <div class="flex justify-between items-center">
                     <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-list-check"></i> 2. Sizing Load Checklist
+                        <i class="fa-solid fa-list-check"></i> 2. Domestic Sizing Checklist
                     </h3>
                     <div class="flex items-center gap-2">
                         <span id="saveBadge" class="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono flex items-center gap-1 transition opacity-0">
                             <i class="fa-solid fa-cloud-arrow-up text-[8px]"></i> Saved
                         </span>
-                        <button onclick="resetApplianceQuantities()" class="text-[10px] text-slate-500 hover:text-rose-400 transition tracking-normal font-bold uppercase">Reset</button>
+                        <button onclick="resetApplianceQuantities()" class="text-[10px] text-slate-500 hover:text-rose-400 transition tracking-normal font-bold uppercase">Reset Quantities</button>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[550px]">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
                         <thead>
                             <tr class="border-b border-slate-800 text-[9px] text-slate-400 uppercase tracking-wider">
                                 <th class="pb-2 font-semibold">Household Item (Click to Edit Name)</th>
@@ -413,7 +436,7 @@
                     <span class="text-[9px] text-slate-500 uppercase font-mono font-bold">Step-by-Step</span>
                 </div>
 
-                <!-- Equation Box explaining how we size panels based on load -->
+                <!-- Equation Box explaining solar sizing in plain English -->
                 <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 text-xs leading-relaxed space-y-3">
                     <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wide block">Clear English Solar Sizing Formulas:</span>
                     
@@ -597,28 +620,23 @@
                     <div class="bg-slate-950 p-3 rounded-xl border border-slate-850 space-y-2">
                         <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Video Classroom Masterclass</span>
                         <div class="aspect-video w-full bg-slate-900 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center relative group">
-                            <!-- Real beautiful Unsplash solar thumbnail -->
                             <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&h=450&q=80" alt="Solar Sizing Course Cover" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
                             
-                            <!-- Video Title Overlay -->
                             <div class="absolute top-0 inset-x-0 bg-gradient-to-b from-black/90 to-transparent p-3 flex items-center justify-between pointer-events-none">
-                                <span class="text-xs font-bold text-white tracking-wide truncate">Greene Brook Masterclass: Vol 1-5 Comprehensive Sizing Course</span>
+                                <span class="text-xs font-bold text-white tracking-wide truncate">Greene Brook Masterclass: Vol 1-5 Sizing Course</span>
                                 <i class="fa-solid fa-ellipsis-vertical text-white text-xs opacity-80"></i>
                             </div>
 
-                            <!-- Play Button Hover Glow Circle -->
                             <div class="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/45 transition duration-300 flex items-center justify-center">
                                 <a href="https://www.youtube.com/playlist?list=PLR2j2TTkamR0" target="_blank" class="w-14 h-14 bg-red-600 hover:bg-red-500 active:scale-95 transition-all text-white rounded-full flex items-center justify-center text-xl shadow-xl shadow-red-600/40 relative group-hover:scale-110 duration-300">
                                     <i class="fa-solid fa-play ml-1"></i>
                                 </a>
                             </div>
 
-                            <!-- Duration Stamp -->
                             <div class="absolute bottom-3 right-3 bg-slate-950/90 text-[10px] font-bold text-slate-200 px-1.5 py-0.5 rounded border border-slate-800 font-mono">
                                 45:12
                             </div>
 
-                            <!-- Mock Video Player Seekbar -->
                             <div class="absolute bottom-0 inset-x-0 h-1 bg-slate-800">
                                 <div class="h-full w-[45%] bg-red-600 rounded-r"></div>
                             </div>
@@ -1005,6 +1023,7 @@
                     pvModuleSize: document.getElementById('pvModuleSize').value,
                     userPanelCount: document.getElementById('userPanelCount').value,
                     dustLoss: document.getElementById('dustLoss').value,
+                    ambientTemp: document.getElementById('ambientTemp').value,
                     diagAh: document.getElementById('diagAh').value,
                     diagVolts: document.getElementById('diagVolts').value,
                     diagWeight: document.getElementById('diagWeight').value,
@@ -1049,6 +1068,7 @@
                     if (s.pvModuleSize !== undefined) document.getElementById('pvModuleSize').value = s.pvModuleSize;
                     if (s.userPanelCount !== undefined) document.getElementById('userPanelCount').value = s.userPanelCount;
                     if (s.dustLoss !== undefined) document.getElementById('dustLoss').value = s.dustLoss;
+                    if (s.ambientTemp !== undefined) document.getElementById('ambientTemp').value = s.ambientTemp;
                     if (s.diagAh !== undefined) document.getElementById('diagAh').value = s.diagAh;
                     if (s.diagVolts !== undefined) document.getElementById('diagVolts').value = s.diagVolts;
                     if (s.diagWeight !== undefined) document.getElementById('diagWeight').value = s.diagWeight;
@@ -1096,7 +1116,6 @@
                         <span class="w-5 h-5 rounded bg-slate-950 flex items-center justify-center text-[9px] text-slate-400">
                             <i class="fa-solid ${app.icon || 'fa-plug'}"></i>
                         </span>
-                        <!-- Editable appliance name input field -->
                         <input type="text" value="${app.name}" oninput="updateField('${app.id}', 'name', this.value)" class="bg-transparent border-b border-transparent hover:border-slate-850 focus:border-yellow-500 focus:bg-slate-950 rounded px-1.5 py-0.5 text-slate-200 text-xs w-28 sm:w-44 font-semibold focus:outline-none transition-all">
                     </td>
                     <td class="py-3 text-center">
@@ -1161,7 +1180,6 @@
             triggerRecalculation();
         }
 
-        // Apply presets dynamically for the general Smart Device manual inputs
         function applyCategoryPresets(category) {
             const surgeIn = document.getElementById('smartDeviceSurge');
             const pfIn = document.getElementById('smartDevicePF');
@@ -1295,7 +1313,6 @@
                     pImg.src = e.target.result;
                     pCont.classList.remove('hidden');
                     pTxt.classList.add('hidden');
-                    // Store stripped base64 for Gemini API OCR call
                     ocrFileBase64 = e.target.result.split(',')[1];
                 };
                 reader.readAsDataURL(file);
@@ -1317,10 +1334,9 @@
             statusBox.className = "p-3 rounded-xl text-xs bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 block";
             statusBox.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Running optical OCR &amp; parameter extraction...`;
 
-            // Try to make a live call to the Gemini API if a file was loaded and base64 exists.
             if (ocrFileLoaded && ocrFileBase64 && !ocrFileLoaded.sample) {
                 try {
-                    const apiKey = ""; // Canvas injects this automatically
+                    const apiKey = ""; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
                     
                     const promptText = `Analyze this appliance nameplate or specification label. Return a raw JSON object matching the following layout:
@@ -1487,6 +1503,7 @@
             const pvModuleW = parseFloat(document.getElementById('pvModuleSize').value) || 450;
             const userPanelCount = parseInt(document.getElementById('userPanelCount').value) || 0;
             const dustAndHeatLoss = parseFloat(document.getElementById('dustLoss').value) || 20;
+            const ambientTemp = parseFloat(document.getElementById('ambientTemp').value) || 25;
 
             const inverterWatts = inverterKva * 1000; 
             const generatorWatts = generatorKva * 1000 * 0.8; 
@@ -1532,6 +1549,11 @@
 
             maxStartupWatts = totalRunningWatts + peakSurgeDiff;
             document.getElementById('activeTotalRunningWatts').innerText = `${totalRunningWatts.toLocaleString()} W`;
+            
+            const totalDailyKwhTextEl = document.getElementById('totalDailyKwhText');
+            if (totalDailyKwhTextEl) {
+                totalDailyKwhTextEl.innerText = `${totalDailyKwh.toFixed(2)} kWh`;
+            }
 
             const autonomyValueEl = document.getElementById('batteryAutonomyValue');
             const autonomyDetailsEl = document.getElementById('batteryAutonomyDetails');
@@ -1573,9 +1595,16 @@
             const panelsNeededCount = Math.ceil(pvTotalPowerNeeded / pvModuleW);
             document.getElementById('pvRequiredCount').innerText = `${panelsNeededCount} x ${pvModuleW}W Panels`;
 
-            // Environmental dust loss scaling
+            // Calculate Solar Panel Heat De-rating
+            const cellTemp = ambientTemp + 25;
+            const tempDifference = Math.max(0, cellTemp - 25);
+            const solarTempLossPercent = tempDifference * 0.4;
+            document.getElementById('solarDeRatingValue').innerText = `-${solarTempLossPercent.toFixed(1)}%`;
+
+            // Environmental dust loss & heat de-rating scaling
             const cleanRatingFactor = (100 - dustAndHeatLoss) / 100;
-            const userSolarProductionKwh = (userPanelCount * pvModuleW * peakSunHours * cleanRatingFactor) / 1000; 
+            const thermalCorrectionFactor = (100 - solarTempLossPercent) / 100;
+            const userSolarProductionKwh = (userPanelCount * pvModuleW * peakSunHours * cleanRatingFactor * thermalCorrectionFactor) / 1000; 
             document.getElementById('userSolarRefillEst').innerText = `${userSolarProductionKwh.toFixed(2)} kWh`;
 
             const verdictBadge = document.getElementById('solarSufficientVerdict');
@@ -1583,7 +1612,7 @@
                 verdictBadge.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-slate-900 text-slate-400";
                 verdictBadge.innerText = "Input solar panel count to verify harvest coverage.";
             } else if (userSolarProductionKwh < neededPvKwh) {
-                const missingPanels = Math.ceil((neededPvKwh - userSolarProductionKwh) * 1000 / (pvModuleW * peakSunHours * cleanRatingFactor));
+                const missingPanels = Math.ceil((neededPvKwh - userSolarProductionKwh) * 1000 / (pvModuleW * peakSunHours * cleanRatingFactor * thermalCorrectionFactor));
                 verdictBadge.className = "p-2.5 rounded-lg text-xs font-semibold text-center mt-1 bg-rose-500/15 text-rose-400 border border-rose-500/30";
                 verdictBadge.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> SOLAR SHORTFALL: Sizing cannot support load! Needs <strong>${missingPanels}</strong> more panel(s) to offset dust &amp; soiling.`;
             } else {
@@ -1636,36 +1665,54 @@
                         explanation += ` Low household current. Standard 1.5 mm² is fully safe.`;
                     }
                 } else {
-                    explanation = `✅ <strong>220V Efficiency:</strong> Running at 220V means half the current (Amps). Your household experiences very low heating losses inside the walls.`;
-                    if (acCurrent > 20) {
+                    explanation = `✨ <strong>220V Standard Mode:</strong> Running at 220V delivers power highly efficiently with standard current ranges.`;
+                    if (acCurrent > 15) {
                         recommendedCable = "4.0 mm²";
-                        cableColor = "text-yellow-400";
-                        explanation += ` High total load of ${acCurrent.toFixed(1)}A. Use 4.0 mm² for main feeds.`;
+                        cableColor = "text-rose-400";
+                        explanation += ` High current of ${acCurrent.toFixed(1)}A requires 4.0 mm² safety wires.`;
                     } else if (acCurrent > 10) {
                         recommendedCable = "2.5 mm²";
-                        explanation += ` Standard current of ${acCurrent.toFixed(1)}A. General 2.5 mm² wiring is standard and safe.`;
+                        cableColor = "text-yellow-400";
+                        explanation += ` Current of ${acCurrent.toFixed(1)}A. Standard 2.5 mm² is recommended.`;
                     } else {
                         recommendedCable = "1.5 mm²";
-                        explanation += ` Low current of ${acCurrent.toFixed(1)}A. Standard 1.5 mm² lines are perfectly safe.`;
+                        explanation += ` Under 10 Amps load. Standard 1.5 mm² copper is fully secure.`;
                     }
                 }
+
                 recommendedAcCableEl.innerText = recommendedCable;
                 recommendedAcCableEl.className = `text-sm font-extrabold ${cableColor} font-mono`;
                 voltageCurrentExplanationEl.innerHTML = explanation;
             }
 
-            // Cabling voltage drop calculations
             const copperResistivity = 1.72e-8;
-            const wireResistance = (copperResistivity * (cableLength * 2)) / (cableSize * 1e-6);
+            const copperTempCoeff = 0.00393;
+            const rBase = (copperResistivity * (cableLength * 2)) / (cableSize * 1e-6);
+            const rTemp = rBase * (1 + copperTempCoeff * (ambientTemp - 25));
             const standardCurrent = totalRunningWatts / batteryVoltage;
-            const voltageDrop = standardCurrent * wireResistance;
-            
+            const voltageDrop = standardCurrent * rTemp;
+            const cablePowerLossWatts = (standardCurrent * standardCurrent) * rTemp;
+
+            document.getElementById('cableHeatLossValue').innerText = `${cablePowerLossWatts.toFixed(2)} Watts`;
+
+            const thermalWarningBox = document.getElementById('thermalWarningBox');
+            if (thermalWarningBox) {
+                if (ambientTemp > 40) {
+                    thermalWarningBox.classList.remove('hidden');
+                    thermalWarningBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1 text-rose-400"></i> <strong>THERMAL HAZARD (Ambient ${ambientTemp}°C):</strong> Severe battery decay risk. Capacity degradation speed doubles for every 10°C rise above standard temperatures. Run active enclosure ventilation fans. Inverter efficiency is lowered by internal safety throttling.`;
+                } else if (ambientTemp > 30) {
+                    thermalWarningBox.classList.remove('hidden');
+                    thermalWarningBox.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1 text-yellow-400"></i> <strong>WARM CLIMATE (Ambient ${ambientTemp}°C):</strong> Solar generation is suffering mild thermal de-rating. Ensure batteries are positioned in a shaded, well-ventilated space.`;
+                } else {
+                    thermalWarningBox.classList.add('hidden');
+                }
+            }
+
             let cableError = false;
             if (cableSize < 25 && pumpActive && totalRunningWatts > 1200) {
                 cableError = true;
             }
 
-            // Generator loading verification
             const chargingWatts = 1500; 
             const totalGenRequiredWatts = totalRunningWatts + chargingWatts;
             let genWarning = false;
@@ -1859,7 +1906,7 @@
             let offset = 0;
 
             function draw() {
-                if (canvas.offsetParent === null) return; // Stop drawing when tab hidden
+                if (canvas.offsetParent === null) return; 
                 canvas.width = canvas.parentElement.clientWidth;
                 canvas.height = canvas.parentElement.clientHeight || 100;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1873,7 +1920,7 @@
                     for (let x = 0; x < canvas.width; x++) {
                         const angle = (x / canvas.width) * Math.PI * 6 + offset;
                         let y = Math.sin(angle) * 30;
-                        y += Math.sin(angle * 3) * 10; // add generator noise
+                        y += Math.sin(angle * 3) * 10; 
                         ctx.lineTo(x, canvas.height / 2 + y);
                     }
                 } else {
